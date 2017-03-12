@@ -13,7 +13,6 @@ export const getTestState = () => EZFlux.cloneDeep({
     actions: {
       startExperiment: (data, state, set) => set({ contaminated: true, freeman: true }),
       contain: (data, state, set) => set({ marinesSent: true, scientists: false }),
-      enterXen: (data, state, set) => set({ freeman: false }),
     }
   }
 });
@@ -24,6 +23,12 @@ export const makeTestBunker = (constrctorCB = () => {}) => {
       super(props);
       this.state = {};
       constrctorCB(this);
+    }
+    componentDidMount() {
+      //if (!(this instanceof TestBunker)) throw new Error('componentDidMount lost Scope');
+    }
+    componentWillUnmount() {
+      //if (!(this instanceof TestBunker)) throw new Error('componentDidMount lost Scope');
     }
     render() {
       const { name } = this.props;

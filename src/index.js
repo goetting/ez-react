@@ -51,8 +51,8 @@ const ezReact = {
   },
 
   connect(...args: any[]): Function | void {
-    if (args[0].constructor.name === 'Function') return ezReact.connectClass(...args);
-    ezReact.connectInstance(...args);
+    if (typeof args[0] === 'function') return ezReact.connectClass(...args);
+    return ezReact.connectInstance(...args);
   },
 
   connectInstance(instance: Object, handlers: StateHandlers, ezFlux: EZInst): void {

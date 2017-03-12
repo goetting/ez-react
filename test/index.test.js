@@ -124,7 +124,7 @@ function instanceStopStart() {
   let connectedTestBunkerInst = null;
   const ConnectedTestBunker = makeTestBunker((inst) => {
     connectedTestBunkerInst = inst;
-    ez.connect(inst, testHandler, ez);
+    ez.connectInstance(inst, testHandler, ez);
   });
 
   expect(ez._events['state.change.blackMesa']).toBeFalsy();
@@ -147,7 +147,7 @@ function classProps() {
 }
 function classStartStop() {
   const ez = makeConnectedEZFlux();
-  const ConnectedBunker = ez.connect(TestBunker, testHandler);
+  const ConnectedBunker = ez.connectClass(TestBunker, testHandler);
 
   expect(ez._events['state.change.blackMesa']).toBeFalsy();
   const tree = mount(<ConnectedBunker name="Black Mesa"/>);
@@ -156,10 +156,9 @@ function classStartStop() {
   expect(ez._events['state.change.blackMesa']).toBeFalsy();
 }
 
-function compile(json) {
-  for (let k in json) {
-    if (typeof json[k] === 'function') it(k, json[k])
-    else describe(k, ()=> compile(json[k]))
-  };
+
+function run(json) {
+  for (let k in json) json[k].call ? it(k, json[k]) : describe(k, () => run(json[k]));
 }
-compile(tests);
+run(tests);
+
