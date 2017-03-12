@@ -22,6 +22,10 @@
     "state",
     "machine"
   ],
+  "dependencies": {
+    "react": "15.x.x",
+    "ez-flux": "https://github.com/goetting/ez-flux#master"
+  },
   "devDependencies": {
     "babel-cli": "^6.23.0",
     "babel-core": "^6.23.1",
@@ -29,8 +33,10 @@
     "babel-jest": "^19.0.0",
     "babel-plugin-transform-class-properties": "^6.23.0",
     "babel-plugin-transform-flow-strip-types": "^6.22.0",
-    "babel-preset-es2015": "^6.22.0",
+    "babel-plugin-transform-react-jsx": "^6.23.0",
+    "babel-preset-latest": "^6.22.0",
     "concurrently": "^3.3.0",
+    "enzyme": "^2.7.1",
     "eslint": "3.13.1",
     "eslint-config-airbnb": "^13.0.0",
     "eslint-plugin-flowtype": "2.29.2",
@@ -40,6 +46,8 @@
     "eslint-plugin-react": "^6.9.0",
     "jest": "^19.0.2",
     "nodemon": "^1.11.0",
+    "react-addons-test-utils": "^15.4.2",
+    "react-dom": "^15.4.2",
     "webpack": "^2.2.1"
   },
   "author": "Goetz Goetting",
