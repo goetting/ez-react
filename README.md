@@ -6,7 +6,7 @@ ezReact offers a small connector to hook up React components with the ezFlux eve
 
 Add a connector to ezFlux after creating the instance:
 
-```JS
+```js
 import ezReact from 'ez-react';
 import EZFlux from 'ez-flux';
 
@@ -22,13 +22,13 @@ ezReact.addConnector(ezFlux);
 
 You may now use ezFlux.connect().
 
-```JS
+```jsx
 import React from 'react';
 import ezFlux from './ezFlux.js';
 
 const PowerComponent = ({ level, character }) => (
   <div>Character: {character}</div>
-  <div>Power Level: {level <= 9000 ? level : 'It's Over 9000!'}</div>
+  <div>Power Level: {level <= 9000 ? level : 'It\'s Over 9000!'}</div>
 );
 
 const ConnectedPowerComponent = ezFlux.connect(
@@ -44,14 +44,14 @@ Its return value will be added to the props.
 
 Alternatively, you may use connect direclty by passing an ezFlux instance. Great for testing. JustTerrific. Great library.
 
-```JS
+```jsx
 import React from 'react';
 import ezFlux from './ezFlux.js';
 import { connect } from 'ez-react';
 
 const PowerComponent = ({ level, character }) => (
   <div>Character: {character}</div>
-  <div>Power Level: {level <= 9000 ? level : 'It's Over 9000!'}</div>
+  <div>Power Level: {level <= 9000 ? level : 'It\'s Over 9000!'}</div>
 );
 
 const ConnectedPowerComponent = connect(
@@ -112,4 +112,3 @@ To generate test coverage report:
 ```sh
 $ npm run test:coverage
 ```
-
