@@ -7,9 +7,9 @@ type StateHandlers = { [stateName: string]: (props: any, state: Object) => void 
 type EventHandler = { name: string, fn: (state: Object) => void };
 type EventHanlders = EventHandler[];
 
-const badHandlersMsg = '2nd arg must be an object mapping state keys to eventHandlers';
-const badComponentMsg = '1st arg must be a React Component class or instance';
-const badEzFluxMsg = '3rd arg must be ezFlux instance. you may also use ezReact.addConnector pattern';
+const badHandlersMsg = '3rd arg must be an object mapping state keys to eventHandlers';
+const badComponentMsg = '2nd arg must be a React Component class or instance';
+const badEzFluxMsg = '1st arg must be ezFlux instance. you may also use ezReact.addConnector pattern';
 const getBadStateMsg = (name: string): string => `key "${name}" not found on state of ezFlux instance`;
 const isObj = obj => !!obj && typeof obj === 'object';
 
@@ -19,9 +19,10 @@ function addListeners(instance: Object, handlers: StateHandlers, ezFlux: EZInst)
 
   for (let i = names.length; i--;) {
     const name: string = names[i];
-    const eventName: string = `state.change.${name}`;
-    const fn = (state) => {
-      const newState: any = handlers[name](state[name], instance.state);
+    const eventName: string = EZFlux.getChangeEventName(name);
+    const fn = () => {
+      const stateScope = ezFlux.state[name];
+      const newState: any = handlers[name](stateScope, instance.state);
 
       if (newState && typeof newState === 'object') instance.setState(newState);
     };
@@ -36,7 +37,7 @@ function removeListeners(handlers: EventHanlders, ezFlux: EZInst) {
 }
 
 const ezReact = {
-  validateArguments(component: any, handlers: StateHandlers, ezFlux: EZInst): void {
+  validateArguments(ezFlux: EZInst, component: any, handlers: StateHandlers): void {
     if (!(ezFlux instanceof EZFlux)) throw new Error(badEzFluxMsg);
     if (!isObj(component) && typeof component !== 'function') throw new Error(badComponentMsg);
     if (!isObj(handlers)) throw new Error(badHandlersMsg);
@@ -51,12 +52,12 @@ const ezReact = {
   },
 
   connect(...args: any[]): Function | void {
-    if (typeof args[0] === 'function') return ezReact.connectClass(...args);
+    if (typeof args[1] === 'function') return ezReact.connectClass(...args);
     return ezReact.connectInstance(...args);
   },
 
-  connectInstance(instance: Object, handlers: StateHandlers, ezFlux: EZInst): void {
-    ezReact.validateArguments(instance, handlers, ezFlux);
+  connectInstance(ezFlux: EZInst, instance: Object, handlers: StateHandlers): void {
+    ezReact.validateArguments(ezFlux, instance, handlers);
     const { componentDidMount, componentWillUnmount } = instance;
     let activeHandlers: EventHanlders = [];
 
@@ -71,8 +72,8 @@ const ezReact = {
     };
   },
 
-  connectClass(Component: Function, handlers: StateHandlers, ezFlux: EZInst): Function {
-    ezReact.validateArguments(Component, handlers, ezFlux);
+  connectClass(ezFlux: EZInst, Component: Function, handlers: StateHandlers): Function {
+    ezReact.validateArguments(ezFlux, Component, handlers);
 
     return class EZWrapper extends React.PureComponent {
       activeHandlers: EventHanlders = [];
@@ -93,25 +94,6 @@ const ezReact = {
         return React.createElement(Component, childProps, this.props.children);
       }
     };
-  },
-
-  addConnector(ezFlux: EZInst): EZInst {
-    ezFlux.connect = function wrapConnect(...args: any[]): Function | void {
-      return ezReact.connect(...args, ezFlux);
-    };
-    ezFlux.connectClass = function connectClassWithEZFlux(
-      Component: Function,
-      handlers: StateHandlers,
-    ): Function {
-      return ezReact.connectClass(Component, handlers, ezFlux);
-    };
-    ezFlux.connectInstance = function connectInstanceWithEZFlux(
-      instance: Object,
-      handlers: StateHandlers,
-    ): void {
-      return ezReact.connectInstance(instance, handlers, ezFlux);
-    };
-    return ezFlux;
   },
 };
 

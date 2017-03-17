@@ -2,17 +2,12 @@ import EZFlux from 'ez-flux';
 import React from 'react';
 import ezReact from '../src/index.js';
 
-export const getTestState = () => EZFlux.cloneDeep({
+export const getTestState = () => ({
   blackMesa: {
-    state: {
-      contaminated: false,
-      freeman: false,
-      marinesSent: false,
-      scientists: true
-    },
+    values: { contaminated: false, freeman: false, marinesSent: false, scientists: true },
     actions: {
-      startExperiment: (data, state, set) => set({ contaminated: true, freeman: true }),
-      contain: (data, state, set) => set({ marinesSent: true, scientists: false }),
+      startExperiment: data => ({ contaminated: true, freeman: true }),
+      contain: data => ({ marinesSent: true, scientists: false }),
     }
   }
 });
@@ -50,5 +45,5 @@ export const makeTestBunker = (constrctorCB = () => {}) => {
   }
 }
 export const TestBunker = makeTestBunker();
-export const makeConnectedEZFlux = () => ezReact.addConnector(new EZFlux(getTestState()));
+export const makeEz = () => new EZFlux(getTestState(), { debug: false });
 export const tryCatch = (fn) => { try { fn() } catch(e) { return e } };

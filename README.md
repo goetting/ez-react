@@ -4,118 +4,108 @@ ezReact offers a small connector to hook up React components with the ezFlux eve
 
 ### Usage
 
-Add a connector to ezFlux after creating the instance:
 
-```js
-import ezReact from 'ez-react';
+
+ezReact.connect expects a component and an Object that maps state namespaces to event handlers.
+An event handler is called after ezFlux updates the state that was specified as its key.
+It will receive the updated ezFlux.state as well as the current props given from its parent.
+Its return value will be assigned to the component.
+Assume an ezFlux instance in app.js:
+
+```JS
 import EZFlux from 'ez-flux';
 
-ezFlux = new EZFlux({
-  power: {
-    state: { level: 3000 },
-    actions: { boost: () => { level: 9000 } }
+export default new EZFlux({
+  blackMesa: {
+    values: { status: 'All systems are green.' },
+    actions: { runExperiment: () => { status: 'Please stay calm.' } },
   }
 });
-
-ezReact.addConnector(ezFlux);
 ```
 
-You may now use ezFlux.connect().
-
-#### Connect Class/Function Shorthand
-```jsx
-import React from 'react';
-import ezFlux from './ezFlux.js';
-
-const PowerComponent = ({ level, character }) => (
-  <div>Character: {character}</div>
-  <div>Power Level: {level < 9000 ? level : 'It\'s Over 9000!'}</div>
-);
-
-const ConnectedPowerComponent = ezFlux.connect(
-  PowerComponent,
-  { power: (powerState, props) => powerState }
-);
-
-export default ConnectedPowerComponent;
-```
-It expects a Component and an Object that maps state keys to event handlers.
-An event handler receives the relevant state, as well as the current props.
-Its return value will be added to the props.
-
-Alternatively, you may use connect direclty by passing an ezFlux instance.
+#### Connect Component Class / Function
 
 ```jsx
 import React from 'react';
-import ezFlux from './ezFlux.js';
 import { connect } from 'ez-react';
+import ezFlux from './app.js';
 
-const PowerComponent = ({ level, character }) => (
-  <div>Character: {character}</div>
-  <div>Power Level: {level < 9000 ? level : 'It\'s Over 9000!'}</div>
+const BlackMesa = ({ motto, status }) => (
+  <div>Welcome to Black Mesa Research Facility.</div>
+  <div>"{motto}"</div>
+  <div>{status}</div>
 );
 
-const ConnectedPowerComponent = connect(
-  PowerComponent,
-  { power: (powerState, props) => powerState },
-  ezFlux
+const ConnectedBlackMesa = connect(
+  ezFlux,
+  BlackMesa,
+  { blackMesa: (values, props) => values },
 );
 
-export default ConnectedPowerComponent;
+export default ConnectedBlackMesa;
 ```
 
 After mounting the component initially:
 
 ```JS
-import PowerComponent from './components/power-component';
-import React form 'react';
+import BlackMesa from './components/black-mesa';
+import React from 'react';
 import ReactDOM from 'react-dom';
 
-ReactDOM.render(<PowerComponent character="Kakkarot" />, 'power-id');
+ReactDOM.render(<BlackMesa motto="Working to make a better tomorrow." />, 'bunker-id');
 
 ```
 
 Your output will be:
 
-Character: Kakkarot
+```
+Welcome to Black Mesa Research Facility.
+"Working to make a better tomorrow."
+All systems are green.
 
-PowerLevel: 3000
+```
 
-After triggering the power boost action anywhere else in your code ...
+After triggering the action to run the experiment, anywhere else in your code ...
 
 ```JS
-ezFlux.actions.power.boost();
+ezFlux.actions.blackMesa.runExperiment();
 ```
 
 ... your output will automatically become:
 
-Character: Kakkarot
+```
+Welcome to Black Mesa Research Facility.
+"Working to make a better tomorrow."
+Please stay calm.
+```
 
-PowerLevel: It's Over 9000!
+#### Connect Component Instance
 
-#### Connect Instance
-Alternatively you may also connect to the component's state.
-This will result in componentDidMount and componentWillUnmount being wrapped - instead of the whole component when connecting through props.
+You may also connect the instance directly within its constructor.
 
-```jsx
+```JS
 import React from 'react';
-import ezFlux from './ezFlux.js';
 import { connect } from 'ez-react';
+import ezFlux from './app.js';
 
-export default class PowerComponent extends React.Component {
-  constructor() {
-    this.state = { level: ezFlux.state.power.level };
-    ezFlux.connect(this, { power: (powerState, props) => powerState });
+
+class BlackMesa extends React.Component {
+  constructor(props) {
+    super(props);
+    connect(ezFlux, this, { blackMesa: values => values });
   }
-  
+
   render() {
     return (
-      <div>Character: {this.props.character}</div>
-      <div>Power Level: {this.state.level < 9000 ? this.state.level : 'It\'s Over 9000!'}</div>
+      <div>Welcome to Black Mesa Research Facility.</div>
+      <div>"{this.props.motto}"</div>
+      <div>{this.state.status}</div>
     );
   }
 }
+
 ```
+
 ### Development
 
 To run Linter, Flow, Bable and Jest and have them watch src and test folders respectively:

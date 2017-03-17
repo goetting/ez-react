@@ -4,7 +4,7 @@ import just from 'jest';
 import { shallow, mount } from 'enzyme';
 import EZFlux from 'ez-flux';
 import {
-  makeConnectedEZFlux,
+  makeEz,
   getTestState,
   testHandler,
   TestBunker,
@@ -14,9 +14,6 @@ import {
 
 const tests = {
   ezReact: {
-    addConnectors: {
-      'should add connectors to an ezFlux instance if needed': addConnectors,
-    },
     connect: {
       'should call connectClass if given component is Class or function': connectClass,
       'should call connectInstance if given component is instance of a React.Component': connectInstance,
@@ -37,105 +34,95 @@ const tests = {
     },
   },
 };
+const blackMesaChange = EZFlux.getChangeEventName('blackMesa');
 
-function addConnectors() {
-  const state = getTestState();
-  const ez = new EZFlux(state);
-
-  expect(ez.state.blackMesa.contaminated).toEqual(false);
-  expect(ez.connect).toEqual(undefined);
-
-  ezReact.addConnector(ez);
-
-  expect(typeof ez.connect).toEqual('function');
-
-}
 function connectClass() {
-  const ez = makeConnectedEZFlux();
+  const ez =  makeEz();
   const actualConnectClass = ezReact.connectClass;
   const mockFn = jest.fn();
 
   ezReact.connectClass = mockFn;
-  const Comp = ez.connect(TestBunker, testHandler);
+  const Comp = ezReact.connect(ez, TestBunker, testHandler);
 
   ezReact.connectClass = actualConnectClass;
   expect(mockFn).toHaveBeenCalled();
 }
 function connectInstance() {
-  const ez = makeConnectedEZFlux();
+  const ez =  makeEz();
   const actualConnectInstance = ezReact.connectInstance;
   const mockFn = jest.fn();
 
   ezReact.connectInstance = mockFn;
-  const Comp = ez.connect(<TestBunker name="Black Mesa" />, testHandler)
+  const Comp = ezReact.connect(ez, <TestBunker name="Black Mesa" />, testHandler)
 
   ezReact.connectInstance = actualConnectInstance;
   expect(mockFn).toHaveBeenCalled();
 }
 function validArgsNoEZFlux() {
-  const err = tryCatch(() => ezReact.connect(TestBunker, testHandler, { crap: true }));
+  const err = tryCatch(() => ezReact.connect({ crap: true}, TestBunker, testHandler));
 
   expect(err).toBeTruthy();
 }
 function validArgsNoComponent() {
-  const ez = makeConnectedEZFlux();
-  let err = tryCatch(() => ez.connect(null, testHandler));
+  const ez =  makeEz();
+  let err = tryCatch(() => ezReact.connect(ez, null, testHandler));
 
   expect(err).toBeTruthy();
 
-  err = tryCatch(() => ez.connect(undefined, testHandler));
+  err = tryCatch(() => ezReact.connect(ez, undefined, testHandler));
   expect(err).toBeTruthy();
 
-  err = tryCatch(() => ez.connect('check me out!', testHandler));
+  err = tryCatch(() => ezReact.connect(ez, 'check me out!', testHandler));
   expect(err).toBeTruthy();
 
-  err = tryCatch(() => ez.connect(1337, testHandler));
+  err = tryCatch(() => ezReact.connect(ez, 1337, testHandler));
   expect(err).toBeTruthy();
 }
 function validArgsNoHandlers() {
-  const ez = makeConnectedEZFlux();
-  const err = tryCatch(() => ez.connect(TestBunker, 'fuuuu'));
+  const ez =  makeEz();
+  const err = tryCatch(() => ezReact.connect(ez, TestBunker, 'fuuuu'));
 
   expect(err).toBeTruthy();
 }
 function validArgsNoValidState() {
-  const ez = makeConnectedEZFlux();
-  let err = tryCatch(() => ez.connect(TestBunker, { crap: () => {} }));
+  const ez =  makeEz();
+  let err = tryCatch(() => ezReact.connect(ez, TestBunker, { crap: () => {} }));
 
   expect(err).toBeTruthy();
-  err = tryCatch(() => ez.connect(TestBunker, { blackMesa: true }));
+  err = tryCatch(() => ezReact.connect(ez, TestBunker, { blackMesa: true }));
   expect(err).toBeTruthy();
 }
-function instanceBindState() {
-  const ez = makeConnectedEZFlux();
+async function instanceBindState() {
+  const ez =  makeEz();
   let connectedTestBunkerInst = null;
   const ConnectedTestBunker = makeTestBunker((inst) => {
     connectedTestBunkerInst = inst;
-    ez.connect(inst, testHandler, ez)
+    ezReact.connect(ez, inst, testHandler);
   });
   const tree = mount(<ConnectedTestBunker name="Black Mesa" />);
 
-  ez.actions.blackMesa.startExperiment();
+  await ez.actions.blackMesa.startExperiment();
+
   expect(connectedTestBunkerInst.state).toEqual(ez.state.blackMesa);
   tree.unmount();
 }
 function instanceStopStart() {
-  const ez = makeConnectedEZFlux();
+  const ez = makeEz();
   let connectedTestBunkerInst = null;
   const ConnectedTestBunker = makeTestBunker((inst) => {
     connectedTestBunkerInst = inst;
-    ez.connectInstance(inst, testHandler, ez);
+    ezReact.connectInstance(ez, inst, testHandler);
   });
 
-  expect(ez._events['state.change.blackMesa']).toBeFalsy();
+  expect(ez._events[blackMesaChange]).toBeFalsy();
   const tree = mount(<ConnectedTestBunker name="Black Mesa" />);
-  expect(ez._events['state.change.blackMesa']).toBeTruthy();
+  expect(ez._events[blackMesaChange]).toBeTruthy();
   tree.unmount();
-  expect(ez._events['state.change.blackMesa']).toBeFalsy();
+  expect(ez._events[blackMesaChange]).toBeFalsy();
 }
 function classProps() {
-  const ez = makeConnectedEZFlux();
-  const ConnectedBunker = ez.connect(TestBunker, testHandler);
+  const ez =  makeEz();
+  const ConnectedBunker = ezReact.connect(ez, TestBunker, testHandler);
   const tree = mount(<ConnectedBunker name="Black Mesa"/>);
   const testBunker = tree.find('TestBunker').node;
   const initialProps = { name: 'Black Mesa', children: undefined };
@@ -146,14 +133,14 @@ function classProps() {
   tree.unmount();
 }
 function classStartStop() {
-  const ez = makeConnectedEZFlux();
-  const ConnectedBunker = ez.connectClass(TestBunker, testHandler);
+  const ez =  makeEz();
+  const ConnectedBunker = ezReact.connectClass(ez, TestBunker, testHandler);
 
-  expect(ez._events['state.change.blackMesa']).toBeFalsy();
+  expect(ez._events[blackMesaChange]).toBeFalsy();
   const tree = mount(<ConnectedBunker name="Black Mesa"/>);
-  expect(ez._events['state.change.blackMesa']).toBeTruthy();
+  expect(ez._events[blackMesaChange]).toBeTruthy();
   tree.unmount();
-  expect(ez._events['state.change.blackMesa']).toBeFalsy();
+  expect(ez._events[blackMesaChange]).toBeFalsy();
 }
 
 
