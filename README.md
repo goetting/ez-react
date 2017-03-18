@@ -2,14 +2,31 @@
 
 ezReact offers a small connector to hook up React components with the ezFlux event and state system.
 
-### Usage
+
+-   [Install](#install)
+-   [Usage](#usage)
+-   [API Documentation](#api-documentation)
+    -   [connectClass](#connectclass)
+    -   [connectInstance](#connectinstance)
+-   [Contributing](#contributing)
+
+# Install
+
+simply install through npm.
 
 
+```sh
+$ npm install ez-react --save
+```
 
-ezReact.connect expects a component and an Object that maps state namespaces to event handlers.
+
+# Usage
+
+ezReact.connectClass expects a component and an Object that maps state namespaces to event handlers.
 An event handler is called after ezFlux updates the state that was specified as its key.
 It will receive the updated ezFlux.state as well as the current props given from its parent.
 Its return value will be assigned to the component.
+
 Assume an ezFlux instance in app.js:
 
 ```JS
@@ -27,7 +44,7 @@ export default new EZFlux({
 
 ```jsx
 import React from 'react';
-import { connect } from 'ez-react';
+import { connectClass } from 'ez-react';
 import ezFlux from './app.js';
 
 const BlackMesa = ({ motto, status }) => (
@@ -36,7 +53,7 @@ const BlackMesa = ({ motto, status }) => (
   <div>{status}</div>
 );
 
-const ConnectedBlackMesa = connect(
+const ConnectedBlackMesa = connectClass(
   ezFlux,
   BlackMesa,
   { blackMesa: (values, props) => values },
@@ -47,7 +64,7 @@ export default ConnectedBlackMesa;
 
 After mounting the component initially:
 
-```JS
+```jsx
 import BlackMesa from './components/black-mesa';
 import React from 'react';
 import ReactDOM from 'react-dom';
@@ -83,16 +100,22 @@ Please stay calm.
 
 You may also connect the instance directly within its constructor.
 
-```JS
+```jsx
 import React from 'react';
-import { connect } from 'ez-react';
+import { connectInstance } from 'ez-react';
 import ezFlux from './app.js';
 
 
 class BlackMesa extends React.Component {
   constructor(props) {
     super(props);
-    connect(ezFlux, this, { blackMesa: values => values });
+    this.state = { status: ezFlux.state.blackMesa.status };
+
+    connectInstance(
+      ezFlux,
+      this,
+      { blackMesa: values => values }
+    );
   }
 
   render() {
@@ -106,7 +129,50 @@ class BlackMesa extends React.Component {
 
 ```
 
-### Development
+
+# API Documentation
+
+Both connect functions expect a StateHandler dictionary of ezFlux-state namespaces mapping to event handler functions.
+If the specified namespace changes, the handler will be called with the namespace object.  
+Values returned from statehandlers will be assigned to the component.  
+
+```TS
+type StateHandlers = {
+  [stateKey: string]: (state: Object, componentData: Object) => Object | void
+};
+```
+
+### connectClass
+
+Handlers will be called with the namespace object and the current props given by the parent.  
+Values returned from statehandlers will be Object.assigned to the props.
+Returns the connected Component.
+
+**parameters**
+-   `ezFlux` **typeof EZFlux**
+-   `Component` **Function**
+-   `stateHandlers` **StateHandlers**
+
+Returns **React.Component**
+
+
+### connectInstance
+
+Handlers will be called with the namespace object and the current component state.  
+Values returned from state handlers will be assigned to the component state through instance.setState().  
+
+**parameters**
+-   `ezFlux` **typeof EZFlux**
+-   `Component` **Object**
+-   `stateHandlers` **StateHandlers**
+
+Returns **void**
+
+# Contributing
+
+Contributions of any kind are always welcome.  
+With further simplification and performance optimization being top priority, features additions should be the absolute exception.
+
 
 To run Linter, Flow, Bable and Jest and have them watch src and test folders respectively:
 ```sh

@@ -3,7 +3,7 @@ import React from 'react';
 import EZFlux from 'ez-flux';
 
 type EZInst = typeof EZFlux;
-type StateHandlers = { [stateName: string]: (props: any, state: Object) => void };
+type StateHandlers = { [stateName: string]: (state: Object, props: any) => Object | void };
 type EventHandler = { name: string, fn: (state: Object) => void };
 type EventHanlders = EventHandler[];
 

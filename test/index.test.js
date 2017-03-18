@@ -12,28 +12,27 @@ import {
   tryCatch,
 } from './test-lib-data';
 
-const tests = {
-  ezReact: {
-    connect: {
-      'should call connectClass if given component is Class or function': connectClass,
-      'should call connectInstance if given component is instance of a React.Component': connectInstance,
-    },
-    validateArguments: {
-      'should throw if given ezFlux is not typeof EZFlux': validArgsNoEZFlux,
-      'should throw if given component is falsy or not typeof object or function': validArgsNoComponent,
-      'should throw if given handlers are falsy or not a map of functions': validArgsNoHandlers,
-      'should throw if given keys in handlers are not ezFLux state keys': validArgsNoValidState,
-    },
-    connectInstance: {
-      'will bind state to component state': instanceBindState,
-      'will start listening after mount and stop listening after umount': instanceStopStart,
-    },
-    connectClass: {
-      'will bind state to props': classProps,
-      'will start after mount and stop after unmount': classStartStop,
-    },
-  },
-};
+describe('ezReact', () => {
+  describe('connect', () => {
+    it('should call connectClass if given component is Class or function', connectClass);
+    it('should call connectInstance if given component is instance of a React.Component', connectInstance);
+  });
+  describe('validateArguments', () => {
+    it('should throw if given ezFlux is not typeof EZFlux', validArgsNoEZFlux);
+    it('should throw if given component is falsy or not typeof object or function', validArgsNoComponent)
+    it('should throw if given handlers are falsy or not a map of functions', validArgsNoHandlers)
+    it('should throw if given keys in handlers are not ezFLux state keys', validArgsNoValidState)
+  });
+  describe('connectInstance', () => {
+    it('will bind state to component state', instanceBindState)
+    it('will start listening after mount and stop listening after umount', instanceStopStart)
+  });
+  describe('connectClass', () => {
+    it('will bind state to props', classProps)
+    it('will start after mount and stop after unmount', classStartStop)
+  });
+})
+
 const blackMesaChange = EZFlux.getChangeEventName('blackMesa');
 
 function connectClass() {
@@ -143,9 +142,4 @@ function classStartStop() {
   expect(ez._events[blackMesaChange]).toBeFalsy();
 }
 
-
-function run(json) {
-  for (let k in json) json[k].call ? it(k, json[k]) : describe(k, () => run(json[k]));
-}
-run(tests);
 
