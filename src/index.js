@@ -98,3 +98,7 @@ const ezReact = {
 };
 
 export default ezReact;
+export const validateArguments = ezReact.validateArguments;
+export const connectInstance = ezReact.connectInstance;
+export const connectClass = ezReact.connectClass;
+export const connect = ezReact.connect;

@@ -24,7 +24,7 @@
   ],
   "dependencies": {
     "react": "15.x.x",
-    "ez-flux": "0.3.x"
+    "ez-flux": "0.4.x"
   },
   "devDependencies": {
     "babel-cli": "^6.23.0",

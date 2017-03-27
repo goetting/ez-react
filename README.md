@@ -8,6 +8,7 @@ ezReact offers a small connector to hook up React components with the ezFlux eve
 -   [API Documentation](#api-documentation)
     -   [connectClass](#connectclass)
     -   [connectInstance](#connectinstance)
+    -   [connect](#connect)
 -   [Contributing](#contributing)
 
 # Install
@@ -56,7 +57,7 @@ const BlackMesa = ({ motto, status }) => (
 const ConnectedBlackMesa = connectClass(
   ezFlux,
   BlackMesa,
-  { blackMesa: (values, props) => values },
+  { blackMesa: values => values },
 );
 
 export default ConnectedBlackMesa;
@@ -153,7 +154,7 @@ Returns the connected Component.
 -   `Component` **Function**
 -   `stateHandlers` **StateHandlers**
 
-Returns **React.Component**
+Returns **Function**
 
 
 ### connectInstance
@@ -167,6 +168,22 @@ Values returned from state handlers will be assigned to the component state thro
 -   `stateHandlers` **StateHandlers**
 
 Returns **void**
+
+# Contributing
+
+Contributions of any kind are always welcome.  
+With further simplification and performance optimization being top priority, features additions should be the absolute exception.
+
+### connect
+
+Will hands its arguments to connectClass or connectInstance depending on the type of Component
+
+**parameters**
+-   `ezFlux` **typeof EZFlux**
+-   `Component` **Object | Function**
+-   `stateHandlers` **StateHandlers**
+
+Returns **void | Function**
 
 # Contributing
 
