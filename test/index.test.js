@@ -119,7 +119,7 @@ function instanceStopStart() {
   tree.unmount();
   expect(ez._events[blackMesaChange]).toBeFalsy();
 }
-function classProps() {
+async function classProps() {
   const ez =  makeEz();
   const ConnectedBunker = ezReact.connect(ez, TestBunker, testHandler);
   const tree = mount(<ConnectedBunker name="Black Mesa"/>);
@@ -127,12 +127,12 @@ function classProps() {
   const initialProps = { name: 'Black Mesa', children: undefined };
   expect(testBunker.props).toEqual(initialProps);
 
-  ez.actions.blackMesa.contain();
+  await ez.actions.blackMesa.contain();
   expect(testBunker.props).toEqual(Object.assign(initialProps, ez.state.blackMesa));
   tree.unmount();
 }
 function classStartStop() {
-  const ez =  makeEz();
+  const ez = makeEz();
   const ConnectedBunker = ezReact.connectClass(ez, TestBunker, testHandler);
 
   expect(ez._events[blackMesaChange]).toBeFalsy();

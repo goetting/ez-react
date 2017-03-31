@@ -4,7 +4,7 @@ import EZFlux from 'ez-flux';
 
 type EZInst = typeof EZFlux;
 type StateHandlers = { [stateName: string]: (state: Object, props: any) => Object | void };
-type EventHandler = { name: string, fn: (state: Object) => void };
+type EventHandler = { name: string, ezReactEventListener: (state: Object) => void };
 type EventHanlders = EventHandler[];
 
 const badHandlersMsg = '3rd arg must be an object mapping state keys to eventHandlers';
@@ -20,20 +20,23 @@ function addListeners(instance: Object, handlers: StateHandlers, ezFlux: EZInst)
   for (let i = names.length; i--;) {
     const name: string = names[i];
     const eventName: string = EZFlux.getChangeEventName(name);
-    const fn = () => {
+    const ezReactEventListener = () => {
       const stateScope = ezFlux.state[name];
       const newState: any = handlers[name](stateScope, instance.state);
-
       if (newState && typeof newState === 'object') instance.setState(newState);
     };
-    activeHandlers.push({ name: eventName, fn });
-    ezFlux.on(eventName, fn);
+    activeHandlers.push({ name: eventName, ezReactEventListener });
+    ezFlux.on(eventName, ezReactEventListener);
   }
   return activeHandlers;
 }
 
 function removeListeners(handlers: EventHanlders, ezFlux: EZInst) {
-  for (let i = handlers.length; i--;) ezFlux.removeListener(handlers[i].name, handlers[i].fn);
+  for (let i = handlers.length; i--;) {
+    const { name, ezReactEventListener } = handlers[i];
+
+    ezFlux.removeListener(name, ezReactEventListener);
+  }
 }
 
 const ezReact = {

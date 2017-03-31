@@ -22,9 +22,9 @@
     "state",
     "machine"
   ],
-  "dependencies": {
+  "preerDependencies": {
     "react": "15.x.x",
-    "ez-flux": "0.4.x"
+    "ez-flux": "0.5.x"
   },
   "devDependencies": {
     "babel-cli": "^6.23.0",
@@ -44,8 +44,11 @@
     "eslint-plugin-jest": "^19.0.1",
     "eslint-plugin-jsx-a11y": "^2.2.3",
     "eslint-plugin-react": "^6.9.0",
+    "eventemitter3": "^2.0.2",
+    "ez-flux": "0.5.x",
     "jest": "^19.0.2",
     "nodemon": "^1.11.0",
+    "react": "15.x.x",
     "react-addons-test-utils": "^15.4.2",
     "react-dom": "^15.4.2",
     "webpack": "^2.2.1"

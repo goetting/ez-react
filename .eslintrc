@@ -3,6 +3,7 @@
   'rules': {
     'no-param-reassign': 0,
     'no-plusplus': 0,
+    'import/no-extraneous-dependencies': 0,
     'valid-typeof': 0,
     'max-len': ['error', 100, 2, {
       ignoreUrls: true,
