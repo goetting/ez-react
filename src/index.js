@@ -4,7 +4,7 @@ import EZFlux from 'ez-flux';
 
 type EZInst = typeof EZFlux;
 type StateHandlers = { [stateName: string]: (state: Object, props: any) => Object | void };
-type EventHandler = { name: string, ezReactEventListener: (state: Object) => void };
+type EventHandler = { name: string, fn: (state: Object) => void };
 type EventHanlders = EventHandler[];
 
 const badHandlersMsg = '3rd arg must be an object mapping state keys to eventHandlers';
@@ -20,22 +20,21 @@ function addListeners(instance: Object, handlers: StateHandlers, ezFlux: EZInst)
   for (let i = names.length; i--;) {
     const name: string = names[i];
     const eventName: string = EZFlux.getChangeEventName(name);
-    const ezReactEventListener = () => {
+    const fn = () => {
+      if (instance.willUnmount) return;
       const stateScope = ezFlux.state[name];
       const newState: any = handlers[name](stateScope, instance.state);
       if (newState && typeof newState === 'object') instance.setState(newState);
     };
-    activeHandlers.push({ name: eventName, ezReactEventListener });
-    ezFlux.on(eventName, ezReactEventListener);
+    activeHandlers.push({ name: eventName, fn });
+    ezFlux.on(eventName, fn);
   }
   return activeHandlers;
 }
 
 function removeListeners(handlers: EventHanlders, ezFlux: EZInst) {
   for (let i = handlers.length; i--;) {
-    const { name, ezReactEventListener } = handlers[i];
-
-    ezFlux.removeListener(name, ezReactEventListener);
+    ezFlux.removeListener(handlers[i].name, handlers[i].fn);
   }
 }
 
@@ -64,12 +63,15 @@ const ezReact = {
     const { componentDidMount, componentWillUnmount } = instance;
     let activeHandlers: EventHanlders = [];
 
+    instance.willUnmount = false;
+
     instance.componentDidMount = (...args): void => {
       activeHandlers = addListeners(instance, handlers, ezFlux);
       if (componentDidMount) componentDidMount.apply(instance, args);
     };
 
     instance.componentWillUnmount = (...args) => {
+      instance.willUnmount = true;
       removeListeners(activeHandlers, ezFlux);
       if (componentWillUnmount) componentWillUnmount.apply(instance, args);
     };
@@ -80,6 +82,7 @@ const ezReact = {
 
     return class EZWrapper extends React.PureComponent {
       activeHandlers: EventHanlders = [];
+      willUnmount: boolean = false;
       state: Object = {};
       props: any;
 
@@ -88,6 +91,7 @@ const ezReact = {
       }
 
       componentWillUnmount() {
+        this.willUnmount = true;
         removeListeners(this.activeHandlers, ezFlux);
       }
 
