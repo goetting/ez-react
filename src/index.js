@@ -19,7 +19,7 @@ function addListeners(instance: Object, handlers: StateHandlers, ezFlux: EZInst)
 
   for (let i = names.length; i--;) {
     const name: string = names[i];
-    const eventName: string = EZFlux.getChangeEventName(name);
+    const eventName: string = EZFlux.getEventNames(name).change;
     const fn = () => {
       if (instance.willUnmount) return;
       const stateScope = ezFlux.state[name];

@@ -24,7 +24,7 @@
   ],
   "preerDependencies": {
     "react": "15.x.x",
-    "ez-flux": "0.5.x"
+    "ez-flux": "0.6.x"
   },
   "devDependencies": {
     "babel-cli": "^6.23.0",
@@ -45,7 +45,7 @@
     "eslint-plugin-jsx-a11y": "^2.2.3",
     "eslint-plugin-react": "^6.9.0",
     "eventemitter3": "^2.0.2",
-    "ez-flux": "0.5.x",
+    "ez-flux": "0.6.x",
     "jest": "^19.0.2",
     "nodemon": "^1.11.0",
     "react": "15.x.x",

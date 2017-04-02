@@ -33,7 +33,7 @@ describe('ezReact', () => {
   });
 })
 
-const blackMesaChange = EZFlux.getChangeEventName('blackMesa');
+const blackMesaChange = EZFlux.getEventNames('blackMesa').change;
 
 function connectClass() {
   const ez =  makeEz();
