@@ -45,5 +45,5 @@ export const makeTestBunker = (constrctorCB = () => {}) => {
   }
 }
 export const TestBunker = makeTestBunker();
-export const makeEz = () => new EZFlux(getTestState());
+export const makeEz = () => new EZFlux(getTestState(), { plugins: ezReact.plugins });
 export const tryCatch = (fn) => { try { fn() } catch(e) { return e } };

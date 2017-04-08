@@ -37,58 +37,58 @@ const blackMesaChange = EZFlux.getEventNames('blackMesa').change;
 
 function connectClass() {
   const ez =  makeEz();
-  const actualConnectClass = ezReact.connectClass;
+  const actualConnectClass = ez.plugins.connectClass;
   const mockFn = jest.fn();
 
-  ezReact.connectClass = mockFn;
-  const Comp = ezReact.connect(ez, TestBunker, testHandler);
+  ez.plugins.connectClass = mockFn;
+  const Comp = ez.plugins.connect(TestBunker, testHandler);
 
-  ezReact.connectClass = actualConnectClass;
+  ez.plugins.connectClass = actualConnectClass;
   expect(mockFn).toHaveBeenCalled();
 }
 function connectInstance() {
   const ez =  makeEz();
-  const actualConnectInstance = ezReact.connectInstance;
+  const actualConnectInstance = ez.plugins.connectInstance;
   const mockFn = jest.fn();
 
-  ezReact.connectInstance = mockFn;
-  const Comp = ezReact.connect(ez, <TestBunker name="Black Mesa" />, testHandler)
+  ez.plugins.connectInstance = mockFn;
+  const Comp = ez.plugins.connect(<TestBunker name="Black Mesa" />, testHandler)
 
-  ezReact.connectInstance = actualConnectInstance;
+  ez.plugins.connectInstance = actualConnectInstance;
   expect(mockFn).toHaveBeenCalled();
 }
 function validArgsNoEZFlux() {
-  const err = tryCatch(() => ezReact.connect({ crap: true}, TestBunker, testHandler));
+  const err = tryCatch(() => ez.plugins.connect({ crap: true}, TestBunker, testHandler));
 
   expect(err).toBeTruthy();
 }
 function validArgsNoComponent() {
   const ez =  makeEz();
-  let err = tryCatch(() => ezReact.connect(ez, null, testHandler));
+  let err = tryCatch(() => ez.plugins.connect(null, testHandler));
 
   expect(err).toBeTruthy();
 
-  err = tryCatch(() => ezReact.connect(ez, undefined, testHandler));
+  err = tryCatch(() => ez.plugins.connect(undefined, testHandler));
   expect(err).toBeTruthy();
 
-  err = tryCatch(() => ezReact.connect(ez, 'check me out!', testHandler));
+  err = tryCatch(() => ez.plugins.connect('check me out!', testHandler));
   expect(err).toBeTruthy();
 
-  err = tryCatch(() => ezReact.connect(ez, 1337, testHandler));
+  err = tryCatch(() => ez.plugins.connect(1337, testHandler));
   expect(err).toBeTruthy();
 }
 function validArgsNoHandlers() {
   const ez =  makeEz();
-  const err = tryCatch(() => ezReact.connect(ez, TestBunker, 'fuuuu'));
+  const err = tryCatch(() => ez.plugins.connect(TestBunker, 'fuuuu'));
 
   expect(err).toBeTruthy();
 }
 function validArgsNoValidState() {
   const ez =  makeEz();
-  let err = tryCatch(() => ezReact.connect(ez, TestBunker, { crap: () => {} }));
+  let err = tryCatch(() => ez.plugins.connect(TestBunker, { crap: () => {} }));
 
   expect(err).toBeTruthy();
-  err = tryCatch(() => ezReact.connect(ez, TestBunker, { blackMesa: true }));
+  err = tryCatch(() => ez.plugins.connect(TestBunker, { blackMesa: true }));
   expect(err).toBeTruthy();
 }
 async function instanceBindState() {
@@ -96,7 +96,7 @@ async function instanceBindState() {
   let connectedTestBunkerInst = null;
   const ConnectedTestBunker = makeTestBunker((inst) => {
     connectedTestBunkerInst = inst;
-    ezReact.connect(ez, inst, testHandler);
+    ez.plugins.connect(inst, testHandler);
   });
   const tree = mount(<ConnectedTestBunker name="Black Mesa" />);
 
@@ -110,18 +110,18 @@ function instanceStopStart() {
   let connectedTestBunkerInst = null;
   const ConnectedTestBunker = makeTestBunker((inst) => {
     connectedTestBunkerInst = inst;
-    ezReact.connectInstance(ez, inst, testHandler);
+    ez.plugins.connectInstance(inst, testHandler);
   });
 
-  expect(ez._events[blackMesaChange]).toBeFalsy();
+  expect(ez.events[blackMesaChange] && ez.events[blackMesaChange].length).toBeFalsy();
   const tree = mount(<ConnectedTestBunker name="Black Mesa" />);
-  expect(ez._events[blackMesaChange]).toBeTruthy();
+  expect(ez.events[blackMesaChange] && ez.events[blackMesaChange].length).toBeTruthy();
   tree.unmount();
-  expect(ez._events[blackMesaChange]).toBeFalsy();
+  expect(ez.events[blackMesaChange] && ez.events[blackMesaChange].length).toBeFalsy();
 }
 async function classProps() {
   const ez =  makeEz();
-  const ConnectedBunker = ezReact.connect(ez, TestBunker, testHandler);
+  const ConnectedBunker = ez.plugins.connect(TestBunker, testHandler);
   const tree = mount(<ConnectedBunker name="Black Mesa"/>);
   const testBunker = tree.find('TestBunker').node;
   const initialProps = { name: 'Black Mesa', children: undefined };
@@ -133,13 +133,13 @@ async function classProps() {
 }
 function classStartStop() {
   const ez = makeEz();
-  const ConnectedBunker = ezReact.connectClass(ez, TestBunker, testHandler);
+  const ConnectedBunker = ez.plugins.connectClass(TestBunker, testHandler);
 
-  expect(ez._events[blackMesaChange]).toBeFalsy();
+  expect(ez.events[blackMesaChange] && ez.events[blackMesaChange].length).toBeFalsy();
   const tree = mount(<ConnectedBunker name="Black Mesa"/>);
-  expect(ez._events[blackMesaChange]).toBeTruthy();
+  expect(ez.events[blackMesaChange] && ez.events[blackMesaChange].length).toBeTruthy();
   tree.unmount();
-  expect(ez._events[blackMesaChange]).toBeFalsy();
+  expect(ez.events[blackMesaChange] && ez.events[blackMesaChange].length).toBeFalsy();
 }
 
 

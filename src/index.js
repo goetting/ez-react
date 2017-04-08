@@ -9,7 +9,7 @@ type EventHanlders = EventHandler[];
 
 const badHandlersMsg = '3rd arg must be an object mapping state keys to eventHandlers';
 const badComponentMsg = '2nd arg must be a React Component class or instance';
-const badEzFluxMsg = '1st arg must be ezFlux instance. you may also use ezReact.addConnector pattern';
+const badEzFluxMsg = 'ezReact functions must be plugged into EZFlux instance';
 const getBadStateMsg = (name: string): string => `key "${name}" not found on state of ezFlux instance`;
 const isObj = obj => !!obj && typeof obj === 'object';
 
@@ -32,80 +32,88 @@ function addListeners(instance: Object, handlers: StateHandlers, ezFlux: EZInst)
   return activeHandlers;
 }
 
-function removeListeners(handlers: EventHanlders, ezFlux: EZInst) {
+function removeListeners(handlers: EventHanlders, ezFlux: EZInst): void {
   for (let i = handlers.length; i--;) {
-    ezFlux.removeListener(handlers[i].name, handlers[i].fn);
+    ezFlux.off(handlers[i].name, handlers[i].fn);
   }
 }
 
-const ezReact = {
-  validateArguments(ezFlux: EZInst, component: any, handlers: StateHandlers): void {
-    if (!(ezFlux instanceof EZFlux)) throw new Error(badEzFluxMsg);
-    if (!isObj(component) && typeof component !== 'function') throw new Error(badComponentMsg);
-    if (!isObj(handlers)) throw new Error(badHandlersMsg);
+function validateArguments(ezFlux: EZInst, component: any, handlers: StateHandlers): void {
+  if (!(ezFlux instanceof EZFlux)) throw new Error(badEzFluxMsg);
+  if (!isObj(component) && typeof component !== 'function') throw new Error(badComponentMsg);
+  if (!isObj(handlers)) throw new Error(badHandlersMsg);
 
-    const names: string[] = Object.keys(handlers);
-    const state: Object = ezFlux.state;
+  const names: string[] = Object.keys(handlers);
+  const state: Object = ezFlux.state;
 
-    for (let i = names.length; i--;) {
-      if (typeof handlers[names[i]] !== 'function') throw new Error(badHandlersMsg);
-      if (!state[names[i]]) throw new Error(getBadStateMsg(names[i]));
+  for (let i = names.length; i--;) {
+    if (typeof handlers[names[i]] !== 'function') throw new Error(badHandlersMsg);
+    if (!state[names[i]]) throw new Error(getBadStateMsg(names[i]));
+  }
+}
+
+
+export function connect(component: Object | Function, handlers: StateHandlers): Function | void {
+  if (typeof component === 'function') return this.plugins.connectClass(component, handlers);
+  return this.plugins.connectInstance(component, handlers);
+}
+
+export function connectInstance(instance: Object, handlers: StateHandlers): void {
+  validateArguments(this, instance, handlers);
+  const { componentDidMount, componentWillUnmount } = instance;
+  let activeHandlers: EventHanlders = [];
+
+  instance.willUnmount = false;
+
+  instance.componentDidMount = (...args): void => {
+    activeHandlers = addListeners(instance, handlers, this);
+    if (componentDidMount) componentDidMount.apply(instance, args);
+  };
+
+  instance.componentWillUnmount = (...args) => {
+    instance.willUnmount = true;
+    removeListeners(activeHandlers, this);
+    if (componentWillUnmount) componentWillUnmount.apply(instance, args);
+  };
+}
+
+export function connectClass(Component: Function, handlers: StateHandlers): Function {
+  const ezFlux = this;
+
+  validateArguments(ezFlux, Component, handlers);
+
+  return class EZWrapper extends React.PureComponent {
+    activeHandlers: EventHanlders = [];
+    willUnmount: boolean = false;
+    state: Object = {};
+    props: any;
+
+    componentDidMount() {
+      this.activeHandlers = addListeners(this, handlers, ezFlux);
     }
-  },
 
-  connect(...args: any[]): Function | void {
-    if (typeof args[1] === 'function') return ezReact.connectClass(...args);
-    return ezReact.connectInstance(...args);
-  },
+    componentWillUnmount() {
+      this.willUnmount = true;
+      removeListeners(this.activeHandlers, ezFlux);
+    }
 
-  connectInstance(ezFlux: EZInst, instance: Object, handlers: StateHandlers): void {
-    ezReact.validateArguments(ezFlux, instance, handlers);
-    const { componentDidMount, componentWillUnmount } = instance;
-    let activeHandlers: EventHanlders = [];
+    render() {
+      const childProps = Object.assign({}, this.props, this.state);
 
-    instance.willUnmount = false;
+      return React.createElement(Component, childProps, this.props.children);
+    }
+  };
+}
 
-    instance.componentDidMount = (...args): void => {
-      activeHandlers = addListeners(instance, handlers, ezFlux);
-      if (componentDidMount) componentDidMount.apply(instance, args);
-    };
+export const plugins = [
+  connect,
+  connectClass,
+  connectInstance,
+];
 
-    instance.componentWillUnmount = (...args) => {
-      instance.willUnmount = true;
-      removeListeners(activeHandlers, ezFlux);
-      if (componentWillUnmount) componentWillUnmount.apply(instance, args);
-    };
-  },
-
-  connectClass(ezFlux: EZInst, Component: Function, handlers: StateHandlers): Function {
-    ezReact.validateArguments(ezFlux, Component, handlers);
-
-    return class EZWrapper extends React.PureComponent {
-      activeHandlers: EventHanlders = [];
-      willUnmount: boolean = false;
-      state: Object = {};
-      props: any;
-
-      componentDidMount() {
-        this.activeHandlers = addListeners(this, handlers, ezFlux);
-      }
-
-      componentWillUnmount() {
-        this.willUnmount = true;
-        removeListeners(this.activeHandlers, ezFlux);
-      }
-
-      render() {
-        const childProps = Object.assign({}, this.props, this.state);
-
-        return React.createElement(Component, childProps, this.props.children);
-      }
-    };
-  },
+export default {
+  plugins,
+  connect,
+  connectClass,
+  connectInstance,
 };
-
-export default ezReact;
-export const validateArguments = ezReact.validateArguments;
-export const connectInstance = ezReact.connectInstance;
-export const connectClass = ezReact.connectClass;
-export const connect = ezReact.connect;

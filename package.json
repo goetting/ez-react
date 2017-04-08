@@ -24,7 +24,7 @@
   ],
   "preerDependencies": {
     "react": "15.x.x",
-    "ez-flux": "0.7.x"
+    "ez-flux": "0.8.x"
   },
   "devDependencies": {
     "babel-cli": "^6.23.0",
@@ -36,7 +36,7 @@
     "babel-plugin-transform-react-jsx": "^6.23.0",
     "babel-preset-latest": "^6.22.0",
     "concurrently": "^3.3.0",
-    "enzyme": "^2.7.1",
+    "enzyme": "^2.8.0",
     "eslint": "3.13.1",
     "eslint-config-airbnb": "^13.0.0",
     "eslint-plugin-flowtype": "2.29.2",
@@ -45,12 +45,12 @@
     "eslint-plugin-jsx-a11y": "^2.2.3",
     "eslint-plugin-react": "^6.9.0",
     "eventemitter3": "^2.0.2",
-    "ez-flux": "0.6.x",
+    "ez-flux": "^0.8.0",
     "jest": "^19.0.2",
     "nodemon": "^1.11.0",
-    "react": "15.x.x",
-    "react-addons-test-utils": "^15.4.2",
-    "react-dom": "^15.4.2",
+    "react": "^15.5.3",
+    "react-addons-test-utils": "^15.5.0",
+    "react-dom": "^15.5.3",
     "webpack": "^2.2.1"
   },
   "author": "Goetz Goetting",
@@ -58,5 +58,8 @@
   "bugs": {
     "url": "https://github.com/goetting/ez-react/issues"
   },
-  "homepage": "https://github.com/goetting/ez-react#readme"
+  "homepage": "https://github.com/goetting/ez-react#readme",
+  "dependencies": {
+    "fbjs": "^0.8.12"
+  }
 }
