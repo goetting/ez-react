@@ -37,6 +37,7 @@ const blackMesaChange = EZFlux.getEventNames('blackMesa').change;
 
 function connectClass() {
   const ez =  makeEz();
+  console.log({ez});
   const actualConnectClass = ez.plugins.connectClass;
   const mockFn = jest.fn();
 

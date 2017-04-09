@@ -1797,9 +1797,9 @@ extsprintf@1.0.2:
   version "1.0.2"
   resolved "https://registry.yarnpkg.com/extsprintf/-/extsprintf-1.0.2.tgz#e1080e0658e300b06294990cc70e1502235fd550"
 
-ez-flux@^0.8.0:
-  version "0.8.0"
-  resolved "https://registry.yarnpkg.com/ez-flux/-/ez-flux-0.8.0.tgz#8f0643b304e08673fc8b198f9fad4c88e9867f59"
+ez-flux@^0.9.0:
+  version "0.9.0"
+  resolved "https://registry.yarnpkg.com/ez-flux/-/ez-flux-0.9.0.tgz#48cefad3a5587850580baaea068797ed832ebf31"
 
 fast-levenshtein@~2.0.4:
   version "2.0.6"
