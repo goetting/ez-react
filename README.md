@@ -14,12 +14,19 @@ ezReact offers a small connector to hook up React components with the ezFlux eve
 # Install
 
 simply install through npm.
+ll
 
+[NPM](https://npmjs.com):
 
 ```sh
 $ npm install ez-react --save
 ```
 
+[Yarn](https://yarnpkg.com/):
+
+```sh
+$ yarn add ez-react
+```
 
 # Usage
 
@@ -28,16 +35,19 @@ An event handler is called after ezFlux updates the state that was specified as 
 It will receive the updated ezFlux.state as well as the current props given from its parent.
 Its return value will be assigned to the component.
 
-Assume an ezFlux instance in app.js:
+Assume an ezFlux instance with ezReact in your app.js:
 
 ```JS
 import EZFlux from 'ez-flux';
+import ezReact from 'ez-react';
 
 export default new EZFlux({
   blackMesa: {
     values: { status: 'All systems are green.' },
     actions: { runExperiment: () => { status: 'Please stay calm.' } },
   }
+}, {
+  plugins: [ezReact],
 });
 ```
 
@@ -45,7 +55,6 @@ export default new EZFlux({
 
 ```jsx
 import React from 'react';
-import { connectClass } from 'ez-react';
 import ezFlux from './app.js';
 
 const BlackMesa = ({ motto, status }) => (
@@ -54,8 +63,7 @@ const BlackMesa = ({ motto, status }) => (
   <div>{status}</div>
 );
 
-const ConnectedBlackMesa = connectClass(
-  ezFlux,
+const ConnectedBlackMesa = ezFlux.plugins.connectClass(
   BlackMesa,
   { blackMesa: values => values },
 );
@@ -103,7 +111,6 @@ You may also connect the instance directly within its constructor.
 
 ```jsx
 import React from 'react';
-import { connectInstance } from 'ez-react';
 import ezFlux from './app.js';
 
 
@@ -112,11 +119,7 @@ class BlackMesa extends React.Component {
     super(props);
     this.state = { status: ezFlux.state.blackMesa.status };
 
-    connectInstance(
-      ezFlux,
-      this,
-      { blackMesa: values => values }
-    );
+    ezFlux.plugins.connectInstance(this, { blackMesa: values => values });
   }
 
   render() {
@@ -145,6 +148,8 @@ type StateHandlers = {
 
 ### connectClass
 
+All documented mehtods will be added to ezFlux.plugins.  
+
 Handlers will be called with the namespace object and the current props given by the parent.  
 Values returned from statehandlers will be Object.assigned to the props.
 Returns the connected Component.
@@ -168,11 +173,6 @@ Values returned from state handlers will be assigned to the component state thro
 -   `stateHandlers` **StateHandlers**
 
 Returns **void**
-
-# Contributing
-
-Contributions of any kind are always welcome.  
-With further simplification and performance optimization being top priority, features additions should be the absolute exception.
 
 ### connect
 
