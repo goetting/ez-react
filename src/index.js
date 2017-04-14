@@ -2,7 +2,8 @@
 import React from 'react';
 import EZFlux from 'ez-flux';
 
-type StateHandlers = { [stateName: string]: (state: Object, props: any) => Object | void };
+type StateHandler = (state: Object, props: any) => Object | void;
+type StateHandlers = { [stateName: string]: StateHandler | string[] };
 type EventHandler = { name: string, fn: (state: Object) => void };
 type EventHanlders = EventHandler[];
 
@@ -13,6 +14,12 @@ const isObj = obj => !!obj && typeof obj === 'object';
 const isFn = fn => typeof fn === 'function';
 
 export default function ezReact() {
+  const createHandler = (keys): StateHandler =>
+    (state) => {
+      const newState = {};
+      for (let i = keys.length; i--;) newState[keys[i]] = state[keys[i]];
+      return newState;
+    };
   const removeListeners = (handlers: EventHanlders): void => {
     for (let i = handlers.length; i--;) this.off(handlers[i].name, handlers[i].fn);
   };
@@ -23,11 +30,13 @@ export default function ezReact() {
     for (let i = names.length; i--;) {
       const name: string = names[i];
       const eventName: string = EZFlux.getEventNames(name).change;
+      const handlerVal = handlers[name];
+      const stateHandler = typeof handlerVal === 'function' ? handlerVal : createHandler(handlerVal);
       const fn = () => {
         if (instance.willUnmount) return;
         const stateScope = this.state[name];
-        const newState: any = handlers[name](stateScope, instance.state);
-        if (newState && typeof newState === 'object') instance.setState(newState);
+        const newState: any = stateHandler(stateScope, instance.state);
+        if (newState) instance.setState(newState);
       };
       activeHandlers.push({ name: eventName, fn });
       this.on(eventName, fn);
@@ -42,8 +51,9 @@ export default function ezReact() {
     const state: Object = this.state;
 
     for (let i = names.length; i--;) {
-      if (!isFn(handlers[names[i]])) throw new Error(badHandlersMsg);
-      if (!state[names[i]]) throw new Error(getBadStateMsg(names[i]));
+      const name = names[i];
+      if (!isFn(handlers[name]) && !Array.isArray(handlers[name])) throw new Error(badHandlersMsg);
+      if (!state[name]) throw new Error(getBadStateMsg(name));
     }
   };
 
@@ -70,7 +80,6 @@ export default function ezReact() {
           removeListeners(this.activeHandlers);
         }
 
-
         render() {
           const childProps = Object.assign({}, this.props, this.state);
 
@@ -85,7 +94,6 @@ export default function ezReact() {
       let activeHandlers: EventHanlders = [];
 
       instance.willUnmount = false;
-
       instance.componentDidMount = (...args): void => {
         activeHandlers = addListeners(instance, handlers, this);
         if (componentDidMount) componentDidMount.apply(instance, args);

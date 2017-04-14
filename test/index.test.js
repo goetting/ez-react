@@ -31,13 +31,15 @@ describe('ezReact', () => {
     it('will bind state to props', classProps)
     it('will start after mount and stop after unmount', classStartStop)
   });
+  describe('stateHandlers', () => {
+    it('should create statehandlers automatically with a given state key array', autoHanlders);
+  });
 })
 
 const blackMesaChange = EZFlux.getEventNames('blackMesa').change;
 
 function connectClass() {
   const ez =  makeEz();
-  console.log({ez});
   const actualConnectClass = ez.plugins.connectClass;
   const mockFn = jest.fn();
 
@@ -141,6 +143,26 @@ function classStartStop() {
   expect(ez.events[blackMesaChange] && ez.events[blackMesaChange].length).toBeTruthy();
   tree.unmount();
   expect(ez.events[blackMesaChange] && ez.events[blackMesaChange].length).toBeFalsy();
+}
+
+async function autoHanlders() {
+  const ez =  makeEz();
+  let connectedTestBunkerInst = null;
+  const ConnectedTestBunker = makeTestBunker((inst) => {
+    connectedTestBunkerInst = inst;
+    ez.plugins.connect(inst, { blackMesa: ['contaminated', 'freeman'] });
+  });
+  const tree = mount(<ConnectedTestBunker name="Black Mesa" />);
+
+  await ez.actions.blackMesa.startExperiment();
+
+  expect(connectedTestBunkerInst.state.contaminated)
+    .toEqual(ez.state.blackMesa.contaminated);
+  expect(connectedTestBunkerInst.state.freeman)
+    .toEqual(ez.state.blackMesa.freeman);
+  expect(connectedTestBunkerInst.state.marinesSent)
+    .not.toEqual(ez.state.blackMesa.marinesSent);
+  tree.unmount();
 }
 
 
