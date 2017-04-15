@@ -30,10 +30,8 @@ $ yarn add ez-react
 
 # Usage
 
-ezReact.connectClass expects a component and an Object that maps state namespaces to event handlers.
-An event handler is called after ezFlux updates the state that was specified as its key.
-It will receive the updated ezFlux.state as well as the current props given from its parent.
-Its return value will be assigned to the component.
+ezReact.connectClass expects a component and an Object that maps state namespaces to an array of state value keys.
+Should the state namespace update, ezFlux will call an event handler to update the given component with the keys from the list given.
 
 Assume an ezFlux instance with ezReact in your app.js:
 
@@ -65,7 +63,7 @@ const BlackMesa = ({ motto, status }) => (
 
 const ConnectedBlackMesa = ezFlux.plugins.connectClass(
   BlackMesa,
-  { blackMesa: values => values },
+  { blackMesa: ['status'] }
 );
 
 export default ConnectedBlackMesa;
@@ -119,7 +117,7 @@ class BlackMesa extends React.Component {
     super(props);
     this.state = { status: ezFlux.state.blackMesa.status };
 
-    ezFlux.plugins.connectInstance(this, { blackMesa: values => values });
+    ezFlux.plugins.connectInstance(this, { blackMesa: ['status'] });
   }
 
   render() {
@@ -136,14 +134,16 @@ class BlackMesa extends React.Component {
 
 # API Documentation
 
-Both connect functions expect a StateHandler dictionary of ezFlux-state namespaces mapping to event handler functions.
-If the specified namespace changes, the handler will be called with the namespace object.  
+
+Both connect functions expect a StateHandler dictionary of ezFlux-state namespaces mapping to either event handler functions or a list of state keys.
+If the specified state in the namespace changes, the handler will be called with the namespace object.  
 Values returned from statehandlers will be assigned to the component.  
+Returning a falsy value will cancel this behaviour.
 
 ```TS
-type StateHandlers = {
-  [stateKey: string]: (state: Object, componentData: Object) => Object | void
-};
+type StateKeys = string[];
+type StateHandler = (state: Object, componentData: Object) => Object | void;
+type StateHandlers = { [stateKey: string]: StateHandler | StateKeys };
 ```
 
 ### connectClass
