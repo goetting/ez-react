@@ -14,7 +14,6 @@ ezReact offers a small connector to hook up React components with the ezFlux eve
 # Install
 
 simply install through npm.
-ll
 
 [NPM](https://npmjs.com):
 
