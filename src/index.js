@@ -58,18 +58,28 @@ export default function ezReact() {
   };
 
   return {
-    connect: (component: Object | Function, handlers: StateHandlers): Function | void => {
-      if (isFn(component)) return this.plugins.connectClass(component, handlers);
+    connect: (
+      component: Object | Function,
+      handlers: StateHandlers,
+      initProps: Object
+    ): Function | void => {
+      if (isFn(component)) return this.plugins.connectClass(component, handlers, initProps);
       return this.plugins.connectInstance(component, handlers);
     },
-    connectClass: (Component: Function, handlers: StateHandlers): Function => {
+    connectClass: (Component: Function, handlers: StateHandlers, initProps: Object): Function => {
       validateArguments(Component, handlers);
 
       return class EZWrapper extends React.PureComponent {
         activeHandlers: EventHanlders = [];
         willUnmount: boolean = false;
         state: Object = {};
-        props: any;
+        props: Object;
+
+        constructor(props) {
+          super(props);
+
+          if (initProps) this.state = initProps;
+        }
 
         componentDidMount() {
           this.activeHandlers = addListeners(this, handlers);

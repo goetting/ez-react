@@ -29,6 +29,7 @@ describe('ezReact', () => {
   });
   describe('connectClass', () => {
     it('will bind state to props', classProps)
+    it('will initialize a component with initProps when given', initProps)
     it('will start after mount and stop after unmount', classStartStop)
   });
   describe('stateHandlers', () => {
@@ -49,6 +50,7 @@ function connectClass() {
   ez.plugins.connectClass = actualConnectClass;
   expect(mockFn).toHaveBeenCalled();
 }
+
 function connectInstance() {
   const ez =  makeEz();
   const actualConnectInstance = ez.plugins.connectInstance;
@@ -60,11 +62,13 @@ function connectInstance() {
   ez.plugins.connectInstance = actualConnectInstance;
   expect(mockFn).toHaveBeenCalled();
 }
+
 function validArgsNoEZFlux() {
   const err = tryCatch(() => ez.plugins.connect({ crap: true}, TestBunker, testHandler));
 
   expect(err).toBeTruthy();
 }
+
 function validArgsNoComponent() {
   const ez =  makeEz();
   let err = tryCatch(() => ez.plugins.connect(null, testHandler));
@@ -80,12 +84,14 @@ function validArgsNoComponent() {
   err = tryCatch(() => ez.plugins.connect(1337, testHandler));
   expect(err).toBeTruthy();
 }
+
 function validArgsNoHandlers() {
   const ez =  makeEz();
   const err = tryCatch(() => ez.plugins.connect(TestBunker, 'fuuuu'));
 
   expect(err).toBeTruthy();
 }
+
 function validArgsNoValidState() {
   const ez =  makeEz();
   let err = tryCatch(() => ez.plugins.connect(TestBunker, { crap: () => {} }));
@@ -94,6 +100,7 @@ function validArgsNoValidState() {
   err = tryCatch(() => ez.plugins.connect(TestBunker, { blackMesa: true }));
   expect(err).toBeTruthy();
 }
+
 async function instanceBindState() {
   const ez =  makeEz();
   let connectedTestBunkerInst = null;
@@ -108,6 +115,7 @@ async function instanceBindState() {
   expect(connectedTestBunkerInst.state).toEqual(ez.state.blackMesa);
   tree.unmount();
 }
+
 function instanceStopStart() {
   const ez = makeEz();
   let connectedTestBunkerInst = null;
@@ -122,6 +130,7 @@ function instanceStopStart() {
   tree.unmount();
   expect(ez.events[blackMesaChange] && ez.events[blackMesaChange].length).toBeFalsy();
 }
+
 async function classProps() {
   const ez =  makeEz();
   const ConnectedBunker = ez.plugins.connect(TestBunker, testHandler);
@@ -134,6 +143,18 @@ async function classProps() {
   expect(testBunker.props).toEqual(Object.assign(initialProps, ez.state.blackMesa));
   tree.unmount();
 }
+
+async function initProps() {
+  const ez =  makeEz();
+  const initPropsParam = Object.assign({}, ez.state.blackMesa);
+  const expectedProps = Object.assign({ name: 'Black Mesa', children: undefined }, initPropsParam);
+  const ConnectedBunker = ez.plugins.connect(TestBunker, testHandler, initPropsParam);
+  const tree = mount(<ConnectedBunker name="Black Mesa"/>);
+  const testBunker = tree.find('TestBunker').node;
+  expect(testBunker.props).toEqual(expectedProps);
+  tree.unmount();
+}
+
 function classStartStop() {
   const ez = makeEz();
   const ConnectedBunker = ez.plugins.connectClass(TestBunker, testHandler);
