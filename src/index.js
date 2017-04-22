@@ -61,7 +61,7 @@ export default function ezReact() {
     connect: (
       component: Object | Function,
       handlers: StateHandlers,
-      initProps: Object
+      initProps: Object,
     ): Function | void => {
       if (isFn(component)) return this.plugins.connectClass(component, handlers, initProps);
       return this.plugins.connectInstance(component, handlers);
