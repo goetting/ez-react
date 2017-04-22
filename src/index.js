@@ -69,7 +69,7 @@ export default function ezReact() {
     connectClass: (Component: Function, handlers: StateHandlers, initProps: Object): Function => {
       validateArguments(Component, handlers);
 
-      return class EZWrapper extends React.PureComponent {
+      return class EZWrapper extends React.Component {
         activeHandlers: EventHanlders = [];
         willUnmount: boolean = false;
         state: Object = {};
