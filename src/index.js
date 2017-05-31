@@ -3,91 +3,66 @@ import React from 'react';
 import EZFlux from 'ez-flux';
 
 type StateHandler = (state: Object, props: any) => Object | void;
-type StateHandlers = { [stateName: string]: StateHandler | string[] };
-type EventHandler = { name: string, fn: (state: Object) => void };
-type EventHanlders = EventHandler[];
 
 const badHandlersMsg = '3rd arg must be an object mapping state keys to eventHandlers';
 const badComponentMsg = '2nd arg must be a React Component class or instance';
 const getBadStateMsg = (name: string): string => `key "${name}" not found on state of ezFlux instance`;
-const isObj = obj => !!obj && typeof obj === 'object';
+
 const isFn = fn => typeof fn === 'function';
 
-export default function ezReact() {
-  const createHandler = (keys): StateHandler =>
-    (state) => {
-      const newState = {};
-      for (let i = keys.length; i--;) newState[keys[i]] = state[keys[i]];
-      return newState;
-    };
-  const removeListeners = (handlers: EventHanlders): void => {
-    for (let i = handlers.length; i--;) this.off(handlers[i].name, handlers[i].fn);
-  };
-  const addListeners = (instance: Object, handlers: StateHandlers): EventHanlders => {
-    const activeHandlers: EventHanlders = [];
-    const names: string[] = Object.keys(handlers);
-
-    for (let i = names.length; i--;) {
-      const name: string = names[i];
-      const eventName: string = EZFlux.getEventNames(name).change;
-      const handlerVal = handlers[name];
-      const stateHandler = typeof handlerVal === 'function' ? handlerVal : createHandler(handlerVal);
-      const fn = () => {
-        if (instance.willUnmount) return;
-        const stateScope = this.state[name];
-        const newState: any = stateHandler(stateScope, instance.state);
-        if (newState) instance.setState(newState);
-      };
-      activeHandlers.push({ name: eventName, fn });
-      this.on(eventName, fn);
-    }
-    return activeHandlers;
-  };
-  const validateArguments = (component: any, handlers: StateHandlers): void => {
-    if (!isObj(component) && !isFn(component)) throw new Error(badComponentMsg);
-    if (!isObj(handlers)) throw new Error(badHandlersMsg);
+export default function createConnector(stores) =>
+  const validateArguments = (component: any, handlers: Handlers): void => {
+    if (!isFn(component)) throw new Error(badComponentMsg);
+    if (handlers && typeof handlers === 'object') throw new Error(badHandlersMsg);
 
     const names: string[] = Object.keys(handlers);
-    const state: Object = this.state;
 
     for (let i = names.length; i--;) {
       const name = names[i];
       if (!isFn(handlers[name]) && !Array.isArray(handlers[name])) throw new Error(badHandlersMsg);
-      if (!state[name]) throw new Error(getBadStateMsg(name));
+      if (!stores[name]) throw new Error(getBadStateMsg(name));
     }
   };
 
-  return {
-    connect: (
-      component: Object | Function,
-      handlers: StateHandlers,
-      initProps: Object,
-    ): Function | void => {
-      if (isFn(component)) return this.plugins.connectClass(component, handlers, initProps);
-      return this.plugins.connectInstance(component, handlers);
-    },
-    connectClass: (Component: Function, handlers: StateHandlers, initProps: Object): Function => {
+  const createHandler = (keys): StateHandler =>
+    (store) => {
+      const newState = {};
+      for (let i = keys.length; i--;) newState[keys[i]] = store[keys[i]];
+      return newState;
+    };
+
+  const addListeners = (instance: Object, handlers: Handlers): Function[] =>
+    Object
+      .keys(handlers)
+      .map((name) => {
+        const stateHandler = isFn(handlers[name]) ? handlers[name] : createHandler(handlers[name]);
+        const store = stores[name];
+        const fn = () => {
+          if (instance.willUnmount) return;
+          const newState: any = stateHandler(store, instance.state);
+
+          if (newState) instance.setState(newState);
+        };
+        store.$on('change', fn);
+        return () => store.$off('change', fn);
+      });
+
+  return function connect(Component: Function, handlers: Handlers, initProps: Object): Function => {
       validateArguments(Component, handlers);
 
       return class EZWrapper extends React.Component {
-        activeHandlers: EventHanlders = [];
+        eventRemovers: Function[] = [];
         willUnmount: boolean = false;
-        state: Object = {};
+        state: Object = initProps || {};
         props: Object;
 
-        constructor(props) {
-          super(props);
-
-          if (initProps) this.state = initProps;
-        }
-
         componentDidMount() {
-          this.activeHandlers = addListeners(this, handlers);
+          this.eventRemovers = addListeners(this, handlers);
         }
 
         componentWillUnmount() {
           this.willUnmount = true;
-          removeListeners(this.activeHandlers);
+          this.eventRemovers.forEach(fn => fn());
         }
 
         render() {
@@ -97,23 +72,4 @@ export default function ezReact() {
         }
       };
     },
-    connectInstance: (instance: Object, handlers: StateHandlers): void => {
-      validateArguments(instance, handlers);
-
-      const { componentDidMount, componentWillUnmount } = instance;
-      let activeHandlers: EventHanlders = [];
-
-      instance.willUnmount = false;
-      instance.componentDidMount = (...args): void => {
-        activeHandlers = addListeners(instance, handlers, this);
-        if (componentDidMount) componentDidMount.apply(instance, args);
-      };
-
-      instance.componentWillUnmount = (...args) => {
-        instance.willUnmount = true;
-        removeListeners(activeHandlers, this);
-        if (componentWillUnmount) componentWillUnmount.apply(instance, args);
-      };
-    },
-  };
 }
