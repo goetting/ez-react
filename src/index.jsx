@@ -1,6 +1,5 @@
-/* @flow */
+/* @flow *//* es-lint-disable no-return-assign */
 import React from 'react';
-import EZFlux from 'ez-flux';
 
 type Store = Object;
 type Stores = { [storeName: string]: Store };
@@ -45,6 +44,8 @@ export default function createConnector(stores: Stores): Function {
             store.$on('change', fn);
             return { name, fn };
           });
+
+        if (!this.events.length) throw new Error(handlerErr);
       }
 
       componentWillUnmount() {
@@ -53,7 +54,7 @@ export default function createConnector(stores: Stores): Function {
       }
 
       render() {
-        return <Component { ...this.props } { ...this.state } />;
+        return <Component {...this.props} {...this.state} />;
       }
     };
 }
