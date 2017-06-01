@@ -1,6 +1,6 @@
 import EZFlux from 'ez-flux';
 import React from 'react';
-import ezReact from '../src/index.js';
+import ezReact from '../src/index';
 
 export const getTestState = () => ({
   blackMesa: {

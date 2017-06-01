@@ -1,8 +1,8 @@
-import ezReact from '../src/index.js';
+import createConnector, { normaliseHandler } from '../src/index';
 import React from 'react';
-import just from 'jest';
+import jest from 'jest';
 import { shallow, mount } from 'enzyme';
-import EZFlux from 'ez-flux';
+import { createStore } from 'ez-flux';
 import {
   makeEz,
   getTestState,
@@ -11,7 +11,7 @@ import {
   makeTestBunker,
   tryCatch,
 } from './test-lib-data';
-
+/*
 describe('ezReact', () => {
   describe('connect', () => {
     it('should call connectClass if given component is Class or function', connectClass);
@@ -186,4 +186,103 @@ async function autoHanlders() {
   tree.unmount();
 }
 
+*/
 
+describe('ezReact', () => {
+  describe('createConnector', () => {
+    it('should return a function', createCon);
+  });
+  describe('connect', () => {
+    it('should throw if given component is not a function', connectNoComponent);
+    it('should throw if given handlers not a map of functions', connectNoHandlers);
+    it('should throw if given handler keys are not stores', connectNoStores);
+    it('should bind state to props', connectBindStateToProps);
+    it('should initialize a component with initProps when given', connectInitProps);
+    it('should start after mount and stop after unmount', connectTiming);
+  });
+  describe('normaliseHandler', () => {
+    it('should fail if the arg is neither array nor function', normaliseFail);
+    it('should return the arg if its a function', normaliseFunction);
+    it('should return a mapping function if given an array of keys', normaliseArray);
+  });
+});
+
+function createCon() {
+  expect(typeof createConnector()).toBe('function');
+}
+
+function connectNoComponent() {
+
+}
+
+function connectNoHandlers() {
+  
+}
+
+function connectNoStores() {
+  
+}
+
+function connectBindStateToProps() {
+  
+}
+
+function connectInitProps() {
+  
+}
+
+function connectTiming() {
+  
+}
+
+function normaliseFail() {
+  let errCount = 0;
+
+  try {
+    normaliseHandler({});
+  } catch (e) {
+    errCount++;
+  }
+  try {
+    normaliseHandler(null);
+  } catch (e) {
+    errCount++;
+  }
+  try {
+    normaliseHandler(0);
+  } catch (e) {
+    errCount++;
+  }
+  try {
+    normaliseHandler(1);
+  } catch (e) {
+    errCount++;
+  }
+  try {
+    normaliseHandler('string');
+  } catch (e) {
+    errCount++;
+  }
+  try {
+    normaliseHandler('');
+  } catch (e) {
+    errCount++;
+  }
+  expect(errCount).toBe(6);
+}
+
+function normaliseFunction() {
+  expect(typeof normaliseHandler(() => {})).toBe('function');
+}
+
+function normaliseArray() {
+  const handler = normaliseHandler(['foo', 'bar']);
+  const testState = { foo: 'test', bar: 'test' };
+
+  expect(typeof handler).toBe('function');
+
+  const newState = handler(testState);
+
+  expect(newState).not.toBe(testState);
+  expect(newState).toMatchObject(testState);
+}
