@@ -1,4 +1,4 @@
-/* @flow *//* es-lint-disable no-return-assign */
+/* @flow *//* eslint-disable no-return-assign */
 import React from 'react';
 
 type Store = Object;

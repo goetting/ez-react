@@ -6,8 +6,13 @@
   "scripts": {
     "start": "bash start.sh",
     "build": "babel src --out-dir lib",
+    "build:watch": "npm run build -- --watch",
+    "flow:watch": "nodemon -q --watch src --ext js -x 'flow; echo'",
     "lint:fix": "eslint --color --fix --ext .js ./src",
-    "test:coverage": "NODE_ENV=test jest --coverage"
+    "lint:watch": "esw -w --cache --color --ext .js --ext .jsx ./src",
+    "test": "jest",
+    "test:watch": "npm run test -- --watch",
+    "test:coverage": "npm run test -- --coverage"
   },
   "repository": {
     "type": "git",
@@ -43,6 +48,7 @@
     "eslint-plugin-jest": "^19.0.1",
     "eslint-plugin-jsx-a11y": "^2.2.3",
     "eslint-plugin-react": "^6.9.0",
+    "eslint-watch": "^3.1.0",
     "eventemitter3": "^2.0.2",
     "ez-flux": "^0.11.x",
     "jest": "^19.0.2",
