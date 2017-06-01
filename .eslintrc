@@ -15,9 +15,9 @@
   },
   'parser': 'babel-eslint',
   'globals': {
-    'window': true,
-    'document': true,
-    'WebSocket': true
+    'expect': true,
+    'describe': true,
+    'it': true,
   },
   'plugins': [
     'flowtype',

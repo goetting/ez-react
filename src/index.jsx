@@ -1,4 +1,4 @@
-/* @flow *//* eslint-disable no-return-assign */
+/* @flow *//* eslint-disable no-return-assign, react/sort-comp */
 import React from 'react';
 
 type Store = Object;
@@ -11,19 +11,21 @@ const handlerErr = '2nd arg must be an object mapping state keys to eventHandler
 
 export function normaliseHandler(handler: Handler): StateHandler {
   if (typeof handler === 'function') return handler;
-  if (Array.isArray(handler)) return store => handler.reduce((a, k) => (a[k] = store[k], a), {});
+  if (Array.isArray(handler)) {
+    return store => handler.reduce((acc, k) => { acc[k] = store[k]; return acc; }, {});
+  }
   throw new Error(handlerErr);
 }
 
 export default function createConnector(stores: Stores): Function {
-  return function (Component: Function, handlers: Handlers, initProps: Object = {}): Function {
+  return function connect(Component: Function, handlers: Handlers, initProps: Object): Function {
     if (typeof Component !== 'function') throw new Error('1st arg must be a React Component');
-    if (typeof handlers !== 'object') throw new Error(handlerErr);
+    if (!handlers || typeof handlers !== 'object') throw new Error(handlerErr);
 
-    class EZWrapper extends React.PureComponent {
-      isMounted: boolean = true;
+    return class EZWrapper extends React.PureComponent {
+      mounted: boolean = true;
       events: { name: string, fn: () => void }[];
-      state: Object = initProps;
+      state: Object = initProps || {};
       props: Object;
 
       componentDidMount() {
@@ -35,7 +37,7 @@ export default function createConnector(stores: Stores): Function {
             const stateHandler: StateHandler = normaliseHandler(handlers[name]);
             const store: Store = stores[name];
             const fn = () => {
-              if (!this.isMounted) return;
+              if (!this.mounted) return;
               const newState: any = stateHandler(store, this.state);
 
               if (newState) this.setState(newState);
@@ -49,7 +51,7 @@ export default function createConnector(stores: Stores): Function {
       }
 
       componentWillUnmount() {
-        this.isMounted = false;
+        this.mounted = false;
         this.events.forEach(e => stores[e.name].$off('change', e.fn));
       }
 
@@ -57,5 +59,5 @@ export default function createConnector(stores: Stores): Function {
         return <Component {...this.props} {...this.state} />;
       }
     };
-  }
+  };
 }
