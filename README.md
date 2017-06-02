@@ -1,19 +1,17 @@
-# ezReact (WIP)
+# ezReact
 
-ezReact offers a small connector to hook up React components with the ezFlux event and state system.
+ezReact offers a small connector to hook up React components with ezFlux stores.  
+By wrapping a React component with a connect function, ezFlux state values are assigned to the component's props.  
 
 
 -   [Install](#install)
 -   [Usage](#usage)
 -   [API Documentation](#api-documentation)
-    -   [connectClass](#connectclass)
-    -   [connectInstance](#connectinstance)
+    -   [createConnector](#createconnector)
     -   [connect](#connect)
 -   [Contributing](#contributing)
 
 # Install
-
-simply install through npm.
 
 [NPM](https://npmjs.com):
 
@@ -29,30 +27,27 @@ $ yarn add ez-react
 
 # Usage
 
-ezReact.connectClass expects a component and an Object that maps state namespaces to an array of state value keys.
-Should the state namespace update, ezFlux will call an event handler to update the given component with the keys from the list given.
-
-Assume an ezFlux instance with ezReact in your app.js:
+First, a _connect_ function has to be created with a map of stores.  
+_connect_ expects a component and an Object that maps store names to an array of state value keys.  
+When the store changes, props of the connected component will update automatically.
 
 ```JS
-import EZFlux from 'ez-flux';
-import ezReact from 'ez-react';
+// app.js
+import { createStore } from 'ez-flux';
+import { createConnector } from 'ez-react';
 
-export default new EZFlux({
-  blackMesa: {
-    values: { status: 'All systems are green.' },
-    actions: { runExperiment: () => { status: 'Please stay calm.' } },
-  }
-}, {
-  plugins: [ezReact],
+const blackMesa = createStore({
+  state: { status: 'All systems are green.' },
+  methods: { runExperiment: () => this.$assign({ status: 'Please stay calm.' }) },
 });
+
+export const connect = createConnector({ blackMesa });
 ```
 
-#### Connect Component Class / Function
-
 ```jsx
+// component.js
 import React from 'react';
-import ezFlux from './app.js';
+import { connect } from './app.js';
 
 const BlackMesa = ({ motto, status }) => (
   <div>Welcome to Black Mesa Research Facility.</div>
@@ -60,9 +55,9 @@ const BlackMesa = ({ motto, status }) => (
   <div>{status}</div>
 );
 
-const ConnectedBlackMesa = ezFlux.plugins.connectClass(
+const ConnectedBlackMesa = connect(
   BlackMesa,
-  { blackMesa: ['status'] }
+  { blackMesa: ['status'] },
 );
 
 export default ConnectedBlackMesa;
@@ -91,7 +86,7 @@ All systems are green.
 After triggering the action to run the experiment, anywhere else in your code ...
 
 ```JS
-ezFlux.actions.blackMesa.runExperiment();
+blackMesa.runExperiment();
 ```
 
 ... your output will automatically become:
@@ -100,33 +95,6 @@ ezFlux.actions.blackMesa.runExperiment();
 Welcome to Black Mesa Research Facility.
 "Working to make a better tomorrow."
 Please stay calm.
-```
-
-#### Connect Component Instance
-
-You may also connect the instance directly within its constructor.
-
-```jsx
-import React from 'react';
-import ezFlux from './app.js';
-
-
-class BlackMesa extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = { status: ezFlux.state.blackMesa.status };
-
-    ezFlux.plugins.connectInstance(this, { blackMesa: ['status'] });
-  }
-
-  render() {
-    return (
-      <div>Welcome to Black Mesa Research Facility.</div>
-      <div>"{this.props.motto}"</div>
-      <div>{this.state.status}</div>
-    );
-  }
-}
 
 ```
 
@@ -134,65 +102,42 @@ class BlackMesa extends React.Component {
 # API Documentation
 
 
-Both connect functions expect a StateHandler dictionary of ezFlux-state namespaces mapping to either event handler functions or a list of state keys.
-If the specified state in the namespace changes, the handler will be called with the namespace object.  
-Values returned from statehandlers will be assigned to the component.  
-Returning a falsy value will cancel this behaviour.
+### createConnector
+
+A connect function will only be able to use handlers based on the store map given to its creator.
 
 ```TS
-type StateKeys = string[];
-type StateHandler = (state: Object, componentData: Object) => Object | void;
-type StateHandlers = { [stateKey: string]: StateHandler | StateKeys };
+  type CreateConnect({ [storeName: string]: Object }) => Function;
 ```
-
-### connectClass
-
-All documented mehtods will be added to ezFlux.plugins.  
-
-Handlers will be called with the namespace object and the current props given by the parent.  
-Values returned from statehandlers will be Object.assigned to the props.
-Returns the connected Component.
-
-**parameters**
--   `ezFlux` **typeof EZFlux**
--   `Component` **Function**
--   `stateHandlers` **StateHandlers**
-
-Returns **Function**
-
-
-### connectInstance
-
-Handlers will be called with the namespace object and the current component state.  
-Values returned from state handlers will be assigned to the component state through instance.setState().  
-
-**parameters**
--   `ezFlux` **typeof EZFlux**
--   `Component` **Object**
--   `stateHandlers` **StateHandlers**
-
-Returns **void**
 
 ### connect
 
-Will hands its arguments to connectClass or connectInstance depending on the type of Component
+Will update a given component automatically when a store changes. These updates are conrolled through handlers.  
+A handler may be an array of state keys or a function. If a list of state keys was passed, a handler function will be create automatically.  
+An object returned by the handler will be assigned to the given component's props.  
+Please Note that all handlers will be executed once _onComponentWillMount_.  
 
-**parameters**
--   `ezFlux` **typeof EZFlux**
--   `Component` **Object | Function**
--   `stateHandlers` **StateHandlers**
+```TS
+  type Component = Function;
+  type Handler = (Store, props: Object) => Object | void;
+  type Handlers = { [storeName: string]: string[] | Handler };
 
-Returns **void | Function**
+  type Connect = (Component, Handlers) => Component;
+```
 
 # Contributing
 
 Contributions of any kind are always welcome.  
-With further simplification and performance optimization being top priority, features additions should be the absolute exception.
+With further simplification and performance optimization being top priority, features additions should be the absolute exception.  
 
-
-To run Linter, Flow, Bable and Jest and have them watch src and test folders respectively:
+To run Linter, Flow, Bable and have them watch src and test folders respectively:
 ```sh
 $ npm start
+```
+
+To run Jest --watch
+```sh
+$ npm run test:watch
 ```
 
 To run Babel once:

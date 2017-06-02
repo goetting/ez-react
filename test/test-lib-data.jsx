@@ -24,12 +24,7 @@ export class TestBunker extends React.Component {
   }
 }
 export const makeStore = () => createStore({
-  state: {
-    contaminated: false,
-    freeman: false,
-    marinesSent: false,
-    scientists: true,
-  },
+  state: { contaminated: false, freeman: false, marinesSent: false, scientists: true },
   methods: {
     startExperiment() { this.$assign({ contaminated: true, freeman: true }); },
     contain() { this.$assign({ marinesSent: true, scientists: false }); },

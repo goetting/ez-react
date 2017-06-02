@@ -3,10 +3,11 @@ import React from 'react';
 
 type Store = Object;
 type Stores = { [storeName: string]: Store };
-type StoreHandler = (Store, props: any) => Object | void;
+type StoreHandler = (Store, props: Object) => Object | void;
 type StoreHandlers = { store: Store, handler: StoreHandler }[];
 type Handler = StoreHandler | string[];
 type Handlers = { [storeName: string]: Handler };
+type Events = { store: Store, listener: () => void }[];
 
 const handlerErr = '2nd arg must be an object mapping state keys to eventHandlers';
 
@@ -19,7 +20,7 @@ export function normaliseHandler(handler: Handler): StoreHandler {
 }
 
 export default function createConnector(stores: Stores): Function {
-  return function connect(Component: Function, handlers: Handlers, initProps: Object): Function {
+  return function connect(Component: Function, handlers: Handlers): Function {
     if (typeof Component !== 'function') throw new Error('1st arg must be a React Component');
     if (!handlers || typeof handlers !== 'object') throw new Error(handlerErr);
 
@@ -29,20 +30,24 @@ export default function createConnector(stores: Stores): Function {
       .map(k => ({ handler: normaliseHandler(handlers[k]), store: stores[k] }));
 
     return class EZWrapper extends React.PureComponent {
-      events: { store: Store, listener: () => void }[];
-      state: Object = initProps || {};
+      events: Events;
+      state: Object = {};
       props: Object;
 
-      componentDidMount() {
-        this.events = storeHandlers.map(({ store, handler }) => {
-          const listener = () => {
-            const props: any = handler(store, this.state);
+      componentWillMount() {
+        this.events = storeHandlers
+          .map(({ store, handler }) => {
+            const listener = () => {
+              const props: any = handler(store, this.state);
+              if (props) this.setState(props);
+            };
+            listener();
+            return { store, listener };
+          });
+      }
 
-            if (props) this.setState(props);
-          };
-          store.$on('change', listener);
-          return { store, listener };
-        });
+      componentDidMount() {
+        this.events.forEach(e => e.store.$on('change', e.listener));
       }
 
       componentWillUnmount() {

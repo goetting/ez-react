@@ -14,7 +14,6 @@ describe('ezReact', () => {
     it('should not blow up if propper params are given', connectWorks);
     it('should throw if given handler keys are not stores', connectNoStores);
     it('should bind state to props', connectBindStateToProps);
-    it('should initialize a component with initProps when given', connectInitProps);
     it('should start after mount and stop after unmount', connectTiming);
   });
   describe('normaliseHandler', () => {
@@ -64,7 +63,6 @@ function connectNoStores() {
   expect(threw).toBe(true);
 }
 
-
 function connectWorks() {
   const blackMesa = makeStore();
   const connect = createConnector({ blackMesa });
@@ -84,26 +82,13 @@ function connectBindStateToProps() {
   const ConnectedBunker = connect(TestBunker, testHandler);
   const tree = mount(<ConnectedBunker name="Black Mesa" />);
   const testBunker = tree.find('TestBunker').node;
-  const initialProps = { name: 'Black Mesa', children: undefined };
+  const initialProps = Object.assign(blackMesa.$copy(), { name: 'Black Mesa' });
 
   expect(testBunker.props).toEqual(initialProps);
 
   blackMesa.startExperiment();
   blackMesa.contain();
   expect(testBunker.props).toEqual(Object.assign(initialProps, blackMesa.$copy()));
-  tree.unmount();
-}
-
-function connectInitProps() {
-  const initProps = { name: 'Red Mesa', foo: 'bar', children: undefined };
-  const blackMesa = makeStore();
-  const connect = createConnector({ blackMesa });
-  const ConnectedBunker = connect(TestBunker, testHandler, initProps);
-  const tree = mount(<ConnectedBunker name="Black Mesa" />);
-  const testBunker = tree.find('TestBunker').node;
-
-  expect(testBunker.props).toEqual(initProps);
-
   tree.unmount();
 }
 
