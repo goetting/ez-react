@@ -3,13 +3,14 @@ import React from 'react';
 
 type Store = Object;
 type Stores = { [storeName: string]: Store };
-type StateHandler = (Store, props: any) => Object | void;
-type Handler = StateHandler | string[];
+type StoreHandler = (Store, props: any) => Object | void;
+type StoreHandlers = { store: Store, handler: StoreHandler }[];
+type Handler = StoreHandler | string[];
 type Handlers = { [storeName: string]: Handler };
 
 const handlerErr = '2nd arg must be an object mapping state keys to eventHandlers';
 
-export function normaliseHandler(handler: Handler): StateHandler {
+export function normaliseHandler(handler: Handler): StoreHandler {
   if (typeof handler === 'function') return handler;
   if (Array.isArray(handler)) {
     return store => handler.reduce((acc, k) => { acc[k] = store[k]; return acc; }, {});
@@ -22,37 +23,30 @@ export default function createConnector(stores: Stores): Function {
     if (typeof Component !== 'function') throw new Error('1st arg must be a React Component');
     if (!handlers || typeof handlers !== 'object') throw new Error(handlerErr);
 
+    const storeHandlers: StoreHandlers = Object
+      .keys(handlers)
+      .filter((k) => { if (!stores[k]) throw new Error(`store "${k}" not found`); return true; })
+      .map(k => ({ handler: normaliseHandler(handlers[k]), store: stores[k] }));
+
     return class EZWrapper extends React.PureComponent {
-      mounted: boolean = true;
-      events: { name: string, fn: () => void }[];
+      events: { store: Store, listener: () => void }[];
       state: Object = initProps || {};
       props: Object;
 
       componentDidMount() {
-        this.events = Object
-          .keys(handlers)
-          .map((name) => {
-            if (!stores[name]) throw new Error(`store "${name}" unknown to this connector`);
+        this.events = storeHandlers.map(({ store, handler }) => {
+          const listener = () => {
+            const props: any = handler(store, this.state);
 
-            const stateHandler: StateHandler = normaliseHandler(handlers[name]);
-            const store: Store = stores[name];
-            const fn = () => {
-              if (!this.mounted) return;
-              const newState: any = stateHandler(store, this.state);
-
-              if (newState) this.setState(newState);
-            };
-
-            store.$on('change', fn);
-            return { name, fn };
-          });
-
-        if (!this.events.length) throw new Error(handlerErr);
+            if (props) this.setState(props);
+          };
+          store.$on('change', listener);
+          return { store, listener };
+        });
       }
 
       componentWillUnmount() {
-        this.mounted = false;
-        this.events.forEach(e => stores[e.name].$off('change', e.fn));
+        this.events.forEach(e => e.store.$off('change', e.listener));
       }
 
       render() {

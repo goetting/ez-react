@@ -52,7 +52,7 @@ function connectNoHandlers() {
   expect(threw).toBe(true);
 }
 
-function connectWorks() {
+function connectNoStores() {
   const connect = createConnector({});
   let threw = false;
 
@@ -61,11 +61,13 @@ function connectWorks() {
   } catch (e) {
     threw = true;
   }
-  expect(threw).toBe(false);
+  expect(threw).toBe(true);
 }
 
-function connectNoStores() {
-  const connect = createConnector({});
+
+function connectWorks() {
+  const blackMesa = makeStore();
+  const connect = createConnector({ blackMesa });
   const ConnectedBunker = connect(TestBunker, testHandler);
   let threw = false;
   try {
@@ -73,7 +75,7 @@ function connectNoStores() {
   } catch (e) {
     threw = true;
   }
-  expect(threw).toBe(true);
+  expect(threw).toBe(false);
 }
 
 function connectBindStateToProps() {
@@ -86,6 +88,7 @@ function connectBindStateToProps() {
 
   expect(testBunker.props).toEqual(initialProps);
 
+  blackMesa.startExperiment();
   blackMesa.contain();
   expect(testBunker.props).toEqual(Object.assign(initialProps, blackMesa.$copy()));
   tree.unmount();
