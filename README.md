@@ -34,7 +34,7 @@ When the store changes, props of the connected component will update automatical
 ```JS
 // app.js
 import { createStore } from 'ez-flux';
-import { createConnector } from 'ez-react';
+import createConnector from 'ez-react';
 
 const blackMesa = createStore({
   state: { status: 'All systems are green.' },
