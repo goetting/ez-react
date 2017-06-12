@@ -38,7 +38,7 @@ export default function createConnector(stores: Stores): Function {
         this.events = storeHandlers
           .map(({ store, handler }) => {
             const listener = () => {
-              const props: any = handler(store, this.state);
+              const props: any = handler(store, { ...this.props, ...this.state });
               if (props) this.setState(props);
             };
             listener();

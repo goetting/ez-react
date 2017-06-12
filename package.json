@@ -37,6 +37,7 @@
     "babel-jest": "^19.0.0",
     "babel-plugin-transform-class-properties": "^6.23.0",
     "babel-plugin-transform-flow-strip-types": "^6.22.0",
+    "babel-plugin-transform-object-rest-spread": "^6.23.0",
     "babel-plugin-transform-react-jsx": "^6.23.0",
     "babel-preset-latest": "^6.22.0",
     "concurrently": "^3.3.0",
