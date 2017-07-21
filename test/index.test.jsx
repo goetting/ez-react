@@ -15,6 +15,7 @@ describe('ezReact', () => {
     it('should throw if given handler keys are not stores', connectNoStores);
     it('should bind state to props', connectBindStateToProps);
     it('should start after mount and stop after unmount', connectTiming);
+    it('should not add store listeners if disabled in createConnector', connectNoListener);
   });
   describe('normaliseHandler', () => {
     it('should fail if the arg is neither array nor function', normaliseFail);
@@ -102,6 +103,16 @@ function connectTiming() {
   expect(blackMesa.$events.change && blackMesa.$events.change.length).toBeTruthy();
   tree.unmount();
   expect(blackMesa.$events.change && blackMesa.$events.change.length).toBeFalsy();
+}
+
+function connectNoListener() {
+  const blackMesa = makeStore();
+  const connect = createConnector({ blackMesa }, { shouldListen: false });
+  const ConnectedBunker = connect(TestBunker, testHandler);
+  const tree = mount(<ConnectedBunker name="Black Mesa" />);
+  expect(blackMesa.$events.change).toBe(undefined);
+
+  tree.unmount();
 }
 
 function normaliseFail() {

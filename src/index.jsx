@@ -2,6 +2,7 @@
 import React from 'react';
 
 type Store = Object;
+type Options = { shouldListen: boolean };
 type Stores = { [storeName: string]: Store };
 type StoreHandler = (Store, props: Object) => Object | void;
 type StoreHandlers = { store: Store, handler: StoreHandler }[];
@@ -19,7 +20,10 @@ export function normaliseHandler(handler: Handler): StoreHandler {
   throw new Error(handlerErr);
 }
 
-export default function createConnector(stores: Stores): Function {
+export default function createConnector(
+  stores: Stores,
+  opts: Options = { shouldListen: true },
+): Function {
   return function connect(Component: Function, handlers: Handlers): Function {
     if (typeof Component !== 'function') throw new Error('1st arg must be a React Component');
     if (!handlers || typeof handlers !== 'object') throw new Error(handlerErr);
@@ -47,7 +51,7 @@ export default function createConnector(stores: Stores): Function {
             if (newState) this.setState(newState);
           };
 
-          store.$on('change', listener);
+          if (opts.shouldListen) store.$on('change', listener);
           listener();
           return { store, listener };
         });
@@ -58,7 +62,7 @@ export default function createConnector(stores: Stores): Function {
       }
 
       componentWillUnmount() {
-        this.events.forEach(e => e.store.$off('change', e.listener));
+        if (opts.shouldListen) this.events.forEach(e => e.store.$off('change', e.listener));
       }
 
       render() {
