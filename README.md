@@ -121,9 +121,14 @@ This will result in the appropriate React warnings.
 ### createConnector
 
 A connect function will only be able to use handlers based on the store map given to its creator.
+If you don't wish the connector to subscribe to any store and only execute every listener on componentWillMount, pass the _shouldListen_ option false.  
+This is useful in backend rendering scenarios where you do not wish your app to be fully reactive.
 
 ```TS
-  type CreateConnect({ [storeName: string]: Object }) => Function;
+  type CreateConnect(
+    { [storeName: string]: Object },
+    { shouldListen: boolean } = { shouldListen: true },
+  ) => Function;
 ```
 
 ### connect
