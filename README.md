@@ -6,6 +6,7 @@ By wrapping a React component with a connect function, ezFlux state values are a
 
 -   [Install](#install)
 -   [Usage](#usage)
+    -   [Life Cycle](#life-cycle)
 -   [API Documentation](#api-documentation)
     -   [createConnector](#createconnector)
     -   [connect](#connect)
@@ -98,6 +99,21 @@ Please stay calm.
 
 ```
 
+
+### Life Cycle
+
+Life Cycle of a connected Component:
+
+- Parent will mount
+- EZWraper will mount
+    - Subscription to stores
+    - Initial call of all connect listeners
+- Connected Component Life Cycle
+
+Please Note:
+A component subscribed to a store should not trigger changes on it on construction.
+Otherwise the EZWrapper will trigger a state change while rendering.
+This will result in the appropriate React warnings.
 
 # API Documentation
 
