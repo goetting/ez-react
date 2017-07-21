@@ -31,23 +31,30 @@ export default function createConnector(stores: Stores): Function {
 
     return class EZWrapper extends React.PureComponent {
       events: Events;
-      state: Object = {};
+      state: Object;
       props: Object;
 
-      componentWillMount() {
-        this.events = storeHandlers
-          .map(({ store, handler }) => {
-            const listener = () => {
-              const props: any = handler(store, { ...this.props, ...this.state });
-              if (props) this.setState(props);
-            };
-            listener();
-            return { store, listener };
-          });
+      constructor(props) {
+        super(props);
+        this.state = props;
       }
 
-      componentDidMount() {
-        this.events.forEach(e => e.store.$on('change', e.listener));
+      componentWillMount() {
+        this.events = storeHandlers.map(({ store, handler }) => {
+          const listener = () => {
+            const newState: any = handler(store, { ...this.state });
+
+            if (newState) this.setState(newState);
+          };
+
+          store.$on('change', listener);
+          listener();
+          return { store, listener };
+        });
+      }
+
+      componentWillReceiveProps(props) {
+        this.setState(props);
       }
 
       componentWillUnmount() {
@@ -55,7 +62,7 @@ export default function createConnector(stores: Stores): Function {
       }
 
       render() {
-        return <Component {...this.props} {...this.state} />;
+        return <Component {...this.state} />;
       }
     };
   };
