@@ -33,14 +33,14 @@ export default function createConnector(
       .filter((k) => { if (!stores[k]) throw new Error(`store "${k}" not found`); return true; })
       .map(k => ({ handler: normaliseHandler(handlers[k]), store: stores[k] }));
 
-    return class EZWrapper extends React.PureComponent {
+    return class EZWrapper extends React.Component {
       events: Events;
       state: Object;
       props: Object;
 
       constructor(props) {
         super(props);
-        this.state = props;
+        this.state = {};
       }
 
       componentWillMount() {
@@ -57,16 +57,12 @@ export default function createConnector(
         });
       }
 
-      componentWillReceiveProps(props) {
-        this.setState(props);
-      }
-
       componentWillUnmount() {
         if (opts.shouldListen) this.events.forEach(e => e.store.$off('change', e.listener));
       }
 
       render() {
-        return <Component {...this.state} />;
+        return <Component {...this.state} {...this.props} />;
       }
     };
   };
