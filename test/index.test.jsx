@@ -16,6 +16,7 @@ describe('ezReact', () => {
     it('should bind state to props', connectBindStateToProps);
     it('should start after mount and stop after unmount', connectTiming);
     it('should not add store listeners if disabled in createConnector', connectNoListener);
+    it('should not cause state contamination by props', stateContaminationByProps);
   });
   describe('normaliseHandler', () => {
     it('should fail if the arg is neither array nor function', normaliseFail);
@@ -113,6 +114,36 @@ function connectNoListener() {
   expect(blackMesa.$events.change).toBe(undefined);
 
   tree.unmount();
+}
+
+function stateContaminationByProps() {
+  const blackMesa = makeStore();
+  const connect = createConnector({ blackMesa }, { shouldListen: false });
+  const ConnectedBunker = connect((props) => <div>{JSON.stringify(props)}</div>, testHandler);
+
+  // Wrapper allows us to emulate the cahnging of whole props by removing props with undefined value
+  // In a real use case if you pass props to the connected component via spread operator, this should
+  // emulate the case where you are removing a key from the props object during an update.
+  const Wrapper = (props) => <ConnectedBunker {
+    ...Object.keys(props).reduce((acc, key) => {
+      return props[key] === undefined ? acc : Object.assign(acc, { [key]: props[key] });
+    }, {})
+  } />
+
+  const wrapper = mount(<Wrapper />);
+  const withLeafProps = (callback) => callback(JSON.parse(wrapper.text()));
+
+  wrapper.setProps({ name: 'Black Mesa', isDangerous: true });
+  withLeafProps(({ name, isDangerous }) => {
+    expect(name).toBe('Black Mesa');
+    expect(isDangerous).toBe(true);
+  });
+
+  wrapper.setProps({ name: 'White Mesa', isDangerous: undefined });
+  withLeafProps(({ name, isDangerous }) => {
+    expect(name).toBe('White Mesa');
+    expect(isDangerous).toBeUndefined();
+  });
 }
 
 function normaliseFail() {
