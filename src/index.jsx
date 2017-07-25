@@ -46,7 +46,7 @@ export default function createConnector(
       componentWillMount() {
         this.events = storeHandlers.map(({ store, handler }) => {
           const listener = () => {
-            const newState: any = handler(store, { ...this.state });
+            const newState: any = handler(store, { ...this.state, ...this.props });
 
             if (newState) this.setState(newState);
           };
