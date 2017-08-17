@@ -2,9 +2,8 @@
 import { createStore } from 'ez-flux';
 import React from 'react';
 
-export class TestBunker extends React.Component {
-  props: Object;
-  state: Object = {};
+export class TestBunker extends React.Component<Object, Object> {
+  state = {};
   render() {
     const { name } = this.props;
     const contaminated = this.props.contaminated || this.state.contaminated;
