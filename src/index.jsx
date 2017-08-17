@@ -1,4 +1,5 @@
-/* @flow *//* eslint-disable no-return-assign, react/sort-comp */
+/* @flow */
+/* eslint-disable no-return-assign, react/sort-comp */
 import React from 'react';
 
 type Store = Object;
@@ -33,10 +34,8 @@ export default function createConnector(
       .filter((k) => { if (!stores[k]) throw new Error(`store "${k}" not found`); return true; })
       .map(k => ({ handler: normaliseHandler(handlers[k]), store: stores[k] }));
 
-    return class EZWrapper extends React.Component {
+    return class EZWrapper extends React.Component<Object, Object> {
       events: Events;
-      state: Object;
-      props: Object;
 
       constructor(props) {
         super(props);
