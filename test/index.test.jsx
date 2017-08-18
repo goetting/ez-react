@@ -1,6 +1,7 @@
 /* eslint-disable no-use-before-define */
 import React from 'react';
 import { mount } from 'enzyme';
+import { mountToJson } from 'enzyme-to-json';
 import createConnector, { normaliseHandler } from '../src/index';
 import { testHandler, TestBunker, makeStore } from './test-lib-data';
 
@@ -82,7 +83,10 @@ function connectBindStateToProps() {
   const blackMesa = makeStore();
   const connect = createConnector({ blackMesa });
   const ConnectedBunker = connect(TestBunker, testHandler);
+  expect(ConnectedBunker.displayName).toBe('EZWrapper(TestBunker)');
   const tree = mount(<ConnectedBunker name="Black Mesa" />);
+  expect(mountToJson(tree)).toMatchSnapshot();
+
   const testBunker = tree.find('TestBunker').node;
   const initialProps = Object.assign(blackMesa.$copy(), { name: 'Black Mesa' });
 
@@ -90,7 +94,10 @@ function connectBindStateToProps() {
 
   blackMesa.startExperiment();
   blackMesa.contain();
+
   expect(testBunker.props).toEqual(Object.assign(initialProps, blackMesa.$copy()));
+  expect(mountToJson(tree)).toMatchSnapshot();
+
   tree.unmount();
 }
 
