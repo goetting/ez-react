@@ -1,6 +1,6 @@
 /* @flow */
 /* eslint-disable no-return-assign, react/sort-comp */
-import React from 'react';
+import * as React from 'react';
 
 type Store = Object;
 type Options = { shouldListen: boolean };
@@ -35,6 +35,9 @@ export default function createConnector(
       .map(k => ({ handler: normaliseHandler(handlers[k]), store: stores[k] }));
 
     return class EZWrapper extends React.Component<Object, Object> {
+      // Set a readable displayName
+      static displayName = `EZWrapper(${Component.name})`;
+
       events: Events;
 
       constructor(props) {
