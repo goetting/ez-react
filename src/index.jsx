@@ -1,6 +1,6 @@
 /* @flow */
 /* eslint-disable no-return-assign, react/sort-comp */
-import React from 'react';
+import * as React from 'react';
 
 type Store = Object;
 type Options = { shouldListen: boolean };
@@ -25,7 +25,7 @@ export default function createConnector(
   stores: Stores,
   opts: Options = { shouldListen: true },
 ): Function {
-  return function connect(Component: Function, handlers: Handlers): Function {
+  return function connect<T: Object>(Component: React.ComponentType<T>, handlers: Handlers): Function {
     if (typeof Component !== 'function') throw new Error('1st arg must be a React Component');
     if (!handlers || typeof handlers !== 'object') throw new Error(handlerErr);
 
@@ -34,7 +34,8 @@ export default function createConnector(
       .filter((k) => { if (!stores[k]) throw new Error(`store "${k}" not found`); return true; })
       .map(k => ({ handler: normaliseHandler(handlers[k]), store: stores[k] }));
 
-    return class EZWrapper extends React.Component<Object, Object> {
+
+    return class EZWrapper extends React.Component<T, Object> {
       events: Events;
 
       constructor(props) {
