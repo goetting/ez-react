@@ -1,6 +1,7 @@
 /* eslint-disable no-use-before-define */
 import React from 'react';
 import { mount } from 'enzyme';
+import { mountToJson } from 'enzyme-to-json';
 import createConnector, { normaliseHandler } from '../src/index';
 import { testHandler, TestBunker, makeStore } from './test-lib-data';
 
@@ -17,6 +18,7 @@ describe('ezReact', () => {
     it('should start after mount and stop after unmount', connectTiming);
     it('should not add store listeners if disabled in createConnector', connectNoListener);
     it('should not cause state contamination by props', stateContaminationByProps);
+    it('should provide a ref to the wrapped component', connectWrappedComponentRef);
   });
   describe('normaliseHandler', () => {
     it('should fail if the arg is neither array nor function', normaliseFail);
@@ -82,7 +84,10 @@ function connectBindStateToProps() {
   const blackMesa = makeStore();
   const connect = createConnector({ blackMesa });
   const ConnectedBunker = connect(TestBunker, testHandler);
+  expect(ConnectedBunker.displayName).toBe('EZWrapper(TestBunker)');
   const tree = mount(<ConnectedBunker name="Black Mesa" />);
+  expect(mountToJson(tree)).toMatchSnapshot();
+
   const testBunker = tree.find('TestBunker').node;
   const initialProps = Object.assign(blackMesa.$copy(), { name: 'Black Mesa' });
 
@@ -90,7 +95,10 @@ function connectBindStateToProps() {
 
   blackMesa.startExperiment();
   blackMesa.contain();
+
   expect(testBunker.props).toEqual(Object.assign(initialProps, blackMesa.$copy()));
+  expect(mountToJson(tree)).toMatchSnapshot();
+
   tree.unmount();
 }
 
@@ -114,6 +122,17 @@ function connectNoListener() {
   expect(blackMesa.$events.change).toBe(undefined);
 
   tree.unmount();
+}
+
+function connectWrappedComponentRef() {
+  const blackMesa = makeStore();
+  const connect = createConnector({ blackMesa }, { shouldListen: false });
+  const ConnectedBunker = connect(TestBunker, testHandler);
+  const tree = mount(<ConnectedBunker name="Black Mesa" />);
+
+  const { wrappedComponent } = tree.instance();
+
+  expect(wrappedComponent).toBeInstanceOf(TestBunker);
 }
 
 function stateContaminationByProps() {

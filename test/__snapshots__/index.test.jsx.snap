@@ -1,0 +1,71 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`ezReact connect should bind state to props 1`] = `
+<EZWrapper(TestBunker)
+  name="Black Mesa"
+>
+  <TestBunker
+    contaminated={false}
+    freeman={false}
+    marinesSent={false}
+    name="Black Mesa"
+    scientists={true}
+  >
+    <div
+      id="test-bunker"
+    >
+      Base: 
+      Black Mesa
+      <ul>
+        <li>
+          Status: 
+          OK
+        </li>
+        <li>
+          Science Personell: 
+          Unknown
+        </li>
+        <li>
+          Security Status: 
+          OK
+        </li>
+      </ul>
+    </div>
+  </TestBunker>
+</EZWrapper(TestBunker)>
+`;
+
+exports[`ezReact connect should bind state to props 2`] = `
+<EZWrapper(TestBunker)
+  name="Black Mesa"
+>
+  <TestBunker
+    contaminated={true}
+    freeman={true}
+    marinesSent={true}
+    name="Black Mesa"
+    scientists={false}
+  >
+    <div
+      id="test-bunker"
+    >
+      Base: 
+      Black Mesa
+      <ul>
+        <li>
+          Status: 
+          Contaminated
+        </li>
+        <li>
+          Science Personell: 
+          OK
+        </li>
+        <li>
+          Security Status: 
+          Please stay calm.
+        </li>
+      </ul>
+    </div>
+  </TestBunker>
+</EZWrapper(TestBunker)>
+`;
