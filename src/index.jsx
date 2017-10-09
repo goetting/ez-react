@@ -35,6 +35,7 @@ export default function createConnector(
       .map(k => ({ handler: normaliseHandler(handlers[k]), store: stores[k] }));
 
     return class EZWrapper extends React.Component<Object, Object> {
+      wrappedComponent: React.Ref<Component>;
       // Set a readable displayName
       static displayName = `EZWrapper(${Component.name})`;
 
@@ -64,7 +65,11 @@ export default function createConnector(
       }
 
       render() {
-        return <Component {...this.state} {...this.props} />;
+        return <Component
+          {...this.state}
+          {...this.props}
+          ref={(component) => { this.wrappedComponent = component; }}
+        />;
       }
     };
   };

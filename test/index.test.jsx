@@ -18,6 +18,7 @@ describe('ezReact', () => {
     it('should start after mount and stop after unmount', connectTiming);
     it('should not add store listeners if disabled in createConnector', connectNoListener);
     it('should not cause state contamination by props', stateContaminationByProps);
+    it('should provide a ref to the wrapped component', connectWrappedComponentRef);
   });
   describe('normaliseHandler', () => {
     it('should fail if the arg is neither array nor function', normaliseFail);
@@ -121,6 +122,17 @@ function connectNoListener() {
   expect(blackMesa.$events.change).toBe(undefined);
 
   tree.unmount();
+}
+
+function connectWrappedComponentRef() {
+  const blackMesa = makeStore();
+  const connect = createConnector({ blackMesa }, { shouldListen: false });
+  const ConnectedBunker = connect(TestBunker, testHandler);
+  const tree = mount(<ConnectedBunker name="Black Mesa" />);
+
+  const { wrappedComponent } = tree.instance();
+
+  expect(wrappedComponent).toBeInstanceOf(TestBunker);
 }
 
 function stateContaminationByProps() {
