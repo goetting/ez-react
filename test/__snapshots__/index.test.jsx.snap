@@ -22,7 +22,7 @@ exports[`ezReact connect should bind state to props 1`] = `
           OK
         </li>
         <li>
-          Science Personell: 
+          Science Personel: 
           Unknown
         </li>
         <li>
@@ -57,7 +57,7 @@ exports[`ezReact connect should bind state to props 2`] = `
           Contaminated
         </li>
         <li>
-          Science Personell: 
+          Science Personel: 
           OK
         </li>
         <li>

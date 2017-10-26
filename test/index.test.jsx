@@ -2,8 +2,11 @@
 import React from 'react';
 import { mount } from 'enzyme';
 import { mountToJson } from 'enzyme-to-json';
-import createConnector, { normaliseHandler } from '../src/index';
+import createConnector from '../src/index';
 import { testHandler, TestBunker, makeStore } from './test-lib-data';
+import raf from 'raf';
+
+const waitRaf = () => new Promise((resolve) => raf(resolve));
 
 describe('ezReact', () => {
   describe('createConnector', () => {
@@ -13,17 +16,10 @@ describe('ezReact', () => {
     it('should throw if given component is not a function', connectNoComponent);
     it('should throw if given handlers not a map of functions', connectNoHandlers);
     it('should not blow up if propper params are given', connectWorks);
-    it('should throw if given handler keys are not stores', connectNoStores);
     it('should bind state to props', connectBindStateToProps);
     it('should start after mount and stop after unmount', connectTiming);
     it('should not add store listeners if disabled in createConnector', connectNoListener);
     it('should not cause state contamination by props', stateContaminationByProps);
-    it('should provide a ref to the wrapped component', connectWrappedComponentRef);
-  });
-  describe('normaliseHandler', () => {
-    it('should fail if the arg is neither array nor function', normaliseFail);
-    it('should return the arg if its a function', normaliseFunction);
-    it('should return a mapping function if given an array of keys', normaliseArray);
   });
 });
 
@@ -55,48 +51,41 @@ function connectNoHandlers() {
   expect(threw).toBe(true);
 }
 
-function connectNoStores() {
-  const connect = createConnector({});
-  let threw = false;
-
-  try {
-    connect(() => {}, { foo: () => {} });
-  } catch (e) {
-    threw = true;
-  }
-  expect(threw).toBe(true);
-}
 
 function connectWorks() {
-  const blackMesa = makeStore();
-  const connect = createConnector({ blackMesa });
+  const blackMesa = makeStore();;
+  const connect = createConnector(blackMesa);
   const ConnectedBunker = connect(TestBunker, testHandler);
   let threw = false;
   try {
     mount(<ConnectedBunker name="Black Mesa" />).unmount();
   } catch (e) {
+    console.log(e);
     threw = true;
   }
   expect(threw).toBe(false);
 }
 
-function connectBindStateToProps() {
+async function connectBindStateToProps() {
   const blackMesa = makeStore();
-  const connect = createConnector({ blackMesa });
+  const connect = createConnector(blackMesa);
   const ConnectedBunker = connect(TestBunker, testHandler);
   expect(ConnectedBunker.displayName).toBe('EZWrapper(TestBunker)');
   const tree = mount(<ConnectedBunker name="Black Mesa" />);
   expect(mountToJson(tree)).toMatchSnapshot();
 
-  const testBunker = tree.find('TestBunker').node;
+  const testBunker = tree.find('TestBunker');
   const initialProps = Object.assign(blackMesa.$copy(), { name: 'Black Mesa' });
 
-  expect(testBunker.props).toEqual(initialProps);
+  expect(tree.find('TestBunker').props()).toEqual(initialProps);
 
   blackMesa.startExperiment();
   blackMesa.contain();
 
-  expect(testBunker.props).toEqual(Object.assign(initialProps, blackMesa.$copy()));
+  await waitRaf();
+
+  tree.update();
+  expect(tree.find('TestBunker').props()).toEqual(Object.assign(initialProps, blackMesa.$copy()));
   expect(mountToJson(tree)).toMatchSnapshot();
 
   tree.unmount();
@@ -104,22 +93,25 @@ function connectBindStateToProps() {
 
 function connectTiming() {
   const blackMesa = makeStore();
-  const connect = createConnector({ blackMesa });
+  const connect = createConnector(blackMesa);
   const ConnectedBunker = connect(TestBunker, testHandler);
 
-  expect(blackMesa.$events.change && blackMesa.$events.change.length).toBeFalsy();
+  expect(blackMesa.$events.change.length).toBe(1);
+  expect(blackMesa.$events.update).toBeFalsy();
   const tree = mount(<ConnectedBunker name="Black Mesa" />);
-  expect(blackMesa.$events.change && blackMesa.$events.change.length).toBeTruthy();
+  expect(blackMesa.$events.change.length).toBe(1);
+  expect(blackMesa.$events.update.length).toBe(1);
   tree.unmount();
-  expect(blackMesa.$events.change && blackMesa.$events.change.length).toBeFalsy();
+  expect(blackMesa.$events.change.length).toBe(1);
+  expect(blackMesa.$events.update.length).toBe(0);
 }
 
 function connectNoListener() {
   const blackMesa = makeStore();
-  const connect = createConnector({ blackMesa }, { shouldListen: false });
+  const connect = createConnector(blackMesa, { shouldListen: false });
   const ConnectedBunker = connect(TestBunker, testHandler);
   const tree = mount(<ConnectedBunker name="Black Mesa" />);
-  expect(blackMesa.$events.change).toBe(undefined);
+  expect(blackMesa.$events.update).toBe(undefined);
 
   tree.unmount();
 }
@@ -137,7 +129,7 @@ function connectWrappedComponentRef() {
 
 function stateContaminationByProps() {
   const blackMesa = makeStore();
-  const connect = createConnector({ blackMesa }, { shouldListen: false });
+  const connect = createConnector(blackMesa, { shouldListen: false });
   const ConnectedBunker = connect(
     props => <div>{JSON.stringify(props)}</div>,
     testHandler,
@@ -169,56 +161,4 @@ function stateContaminationByProps() {
     expect(name).toBe('White Mesa');
     expect(isDangerous).toBeUndefined();
   });
-}
-
-function normaliseFail() {
-  let errCount = 0;
-
-  try {
-    normaliseHandler({});
-  } catch (e) {
-    errCount++;
-  }
-  try {
-    normaliseHandler(null);
-  } catch (e) {
-    errCount++;
-  }
-  try {
-    normaliseHandler(0);
-  } catch (e) {
-    errCount++;
-  }
-  try {
-    normaliseHandler(1);
-  } catch (e) {
-    errCount++;
-  }
-  try {
-    normaliseHandler('string');
-  } catch (e) {
-    errCount++;
-  }
-  try {
-    normaliseHandler('');
-  } catch (e) {
-    errCount++;
-  }
-  expect(errCount).toBe(6);
-}
-
-function normaliseFunction() {
-  expect(typeof normaliseHandler(() => {})).toBe('function');
-}
-
-function normaliseArray() {
-  const handler = normaliseHandler(['foo', 'bar']);
-  const testState = { foo: 'test', bar: 'test' };
-
-  expect(typeof handler).toBe('function');
-
-  const newState = handler(testState);
-
-  expect(newState).not.toBe(testState);
-  expect(newState).toMatchObject(testState);
 }

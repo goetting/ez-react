@@ -7,39 +7,32 @@ type Options = { shouldListen: boolean };
 type Stores = { [storeName: string]: Store };
 type StoreHandler = (Store, props: Object) => Object | void;
 type StoreHandlers = { store: Store, handler: StoreHandler }[];
-type Handler = StoreHandler | string[];
-type Handlers = { [storeName: string]: Handler };
-type Events = { store: Store, listener: () => void }[];
 
 const handlerErr = '2nd arg must be an object mapping state keys to eventHandlers';
 
-export function normaliseHandler(handler: Handler): StoreHandler {
-  if (typeof handler === 'function') return handler;
-  if (Array.isArray(handler)) {
-    return store => handler.reduce((acc, k) => { acc[k] = store[k]; return acc; }, {});
-  }
-  throw new Error(handlerErr);
-}
-
 export default function createConnector(
-  stores: Stores,
+  store: Store,
   opts: Options = { shouldListen: true },
 ): Function {
-  return function connect<T: Object>(Component: React.ComponentType<T>, handlers: Handlers): Function {
+  return function connect<T: Object>(Component: React.ComponentType<T>, handler: StoreHandler): Function {
     if (typeof Component !== 'function') throw new Error('1st arg must be a React Component');
-    if (!handlers || typeof handlers !== 'object') throw new Error(handlerErr);
+    if (!handler || typeof handler !== 'function') throw new Error('2nd arg must be an function');
 
-    const storeHandlers: StoreHandlers = Object
-      .keys(handlers)
-      .filter((k) => { if (!stores[k]) throw new Error(`store "${k}" not found`); return true; })
-      .map(k => ({ handler: normaliseHandler(handlers[k]), store: stores[k] }));
+    let updateRequest;
+
+    const update = () => {
+      if (updateRequest) window.cancelAnimationFrame(updateRequest);
+      updateRequest = window.requestAnimationFrame(() => store.$emit('update'));
+    }
+
+    store.$on('change', update);
 
     return class EZWrapper extends React.Component<T, Object> {
       wrappedComponent: React.Ref<Component>;
       // Set a readable displayName
       static displayName = `EZWrapper(${Component.name})`;
 
-      events: Events;
+      storeListener: () => void;
 
       constructor(props) {
         super(props);
@@ -47,29 +40,29 @@ export default function createConnector(
       }
 
       componentWillMount() {
-        this.events = storeHandlers.map(({ store, handler }) => {
-          const listener = () => {
-            const newState: any = handler(store, { ...this.state, ...this.props });
+        const listener = () => {
+          const newState: any = handler(store, { ...this.state, ...this.props });
+          if (newState) this.setState(newState);
+        };
 
-            if (newState) this.setState(newState);
-          };
+        if (opts.shouldListen) {
+          store.$on('update', listener);
+          this.storeListener = listener;
+        }
 
-          if (opts.shouldListen) store.$on('change', listener);
-          listener();
-          return { store, listener };
-        });
+        listener();
       }
 
       componentWillUnmount() {
-        if (opts.shouldListen) this.events.forEach(e => e.store.$off('change', e.listener));
+        if (opts.shouldListen) store.$off('update', this.storeListener);
+      }
+
+      getComponentProps() {
+        return { ...this.state, ...this.props };
       }
 
       render() {
-        return <Component
-          {...this.state}
-          {...this.props}
-          ref={(component) => { this.wrappedComponent = component; }}
-        />;
+        return <Component {...this.getComponentProps()}/>;
       }
     };
   };
