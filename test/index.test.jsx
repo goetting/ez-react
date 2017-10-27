@@ -111,6 +111,14 @@ describe('ezReact', () => {
         expect(store.$events.update.length).toBe(0);
     });
 
+    it('should provide a ref to the wrapped component if withRef is set', () => {
+      const ConnectedBunkerWithRef = connect(TestBunker, testHandler, { withRef: true });
+      const tree = mount(<Provider store={store}><ConnectedBunkerWithRef name="Black Mesa" /></Provider>);
+  
+      const { wrappedComponent } = tree.find(ConnectedBunkerWithRef).instance().refs;
+      expect(wrappedComponent).toBeInstanceOf(TestBunker);
+    })
+
     it('should not cause state contamination by props', async () => {
       // Wrapper allows us to emulate the changing of whole props by removing props with undefined value
       // In a real use case if you pass props to the connected component via spread operator, this should

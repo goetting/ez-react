@@ -10,6 +10,7 @@ type StoreHandler = (Store, props: Object) => Object | void;
 type StoreHandlers = { store: Store, handler: StoreHandler }[];
 
 type ProviderProps = { store: Store, children: React.Node };
+type ConnectOptions = { withRef?: boolean };
 
 export function createProvider(key: string = 'store') {
   class Provider extends React.PureComponent<ProviderProps> {
@@ -35,10 +36,8 @@ export function createProvider(key: string = 'store') {
   return Provider;
 }
 
-// TODO implement withRef support for wrappedComponent
-// https://github.com/reactjs/react-redux/blob/master/src/components/connectAdvanced.js#L176
 export function createConnect<T>(key: string = 'store') {
-  return function connect<T: Object>(Component: React.ComponentType<T>, handler: StoreHandler): Function {
+  return function connect<T: Object>(Component: React.ComponentType<T>, handler: StoreHandler, options: ConnectOptions = {}): Function {
     if (typeof Component !== 'function') throw new Error('1st arg must be a React Component');
     if (!handler || typeof handler !== 'function') throw new Error('2nd arg must be an function');
 
@@ -102,7 +101,10 @@ export function createConnect<T>(key: string = 'store') {
       }
 
       render() {
-        return <Component {...this.getComponentProps()}/>;
+        const props = {};
+        if (options.withRef) props.ref = 'wrappedComponent';
+
+        return <Component {...props} {...this.getComponentProps()}/>;
       }
     }
   }
