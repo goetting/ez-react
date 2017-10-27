@@ -1,6 +1,7 @@
 /* @flow */
 /* eslint-disable no-return-assign, react/sort-comp */
 import * as React from 'react';
+import PropTypes from 'prop-types';
 
 type Store = Object;
 type Options = { shouldListen: boolean };
@@ -8,53 +9,92 @@ type Stores = { [storeName: string]: Store };
 type StoreHandler = (Store, props: Object) => Object | void;
 type StoreHandlers = { store: Store, handler: StoreHandler }[];
 
-const handlerErr = '2nd arg must be an object mapping state keys to eventHandlers';
+type ProviderProps = { store: Store, children: React.Node };
 
-export default function createConnector(
-  store: Store,
-  opts: Options = { shouldListen: true },
-): Function {
+export function createProvider(key: string = 'store') {
+  class Provider extends React.PureComponent<ProviderProps> {
+
+    store: Store;
+
+    constructor(props: ProviderProps, context: any) {
+      super(props, context);
+      this.store = props.store;
+    }
+
+    getChildContext() {
+      return { [key]: this.store };
+    }
+
+    render() {
+      return this.props.children;
+    }
+  }
+
+  Provider.childContextTypes = { [key]: PropTypes.object };
+
+  return Provider;
+}
+
+// TODO implement withRef support for wrappedComponent
+// https://github.com/reactjs/react-redux/blob/master/src/components/connectAdvanced.js#L176
+export function createConnect<T>(key: string = 'store') {
   return function connect<T: Object>(Component: React.ComponentType<T>, handler: StoreHandler): Function {
     if (typeof Component !== 'function') throw new Error('1st arg must be a React Component');
     if (!handler || typeof handler !== 'function') throw new Error('2nd arg must be an function');
 
-    let updateRequest;
+    return class Connect extends React.PureComponent<T, any> {
+      static contextTypes = { [key]: PropTypes.object };
+      static displayName = `Connected(${Component.name})`;
 
-    const update = () => {
-      if (updateRequest) window.cancelAnimationFrame(updateRequest);
-      updateRequest = window.requestAnimationFrame(() => store.$emit('update'));
-    }
-
-    store.$on('change', update);
-
-    return class EZWrapper extends React.Component<T, Object> {
-      wrappedComponent: React.Ref<Component>;
       // Set a readable displayName
-      static displayName = `EZWrapper(${Component.name})`;
+      updateRequest: number;
 
-      storeListener: () => void;
+      store: Store;
 
-      constructor(props) {
-        super(props);
+      onChange: () => any;
+      onUpdate: () => any;
+
+      constructor(props, context: { [key :string]: Store }) {
+        super(props, context);
         this.state = {};
+
+        const store = context[key];
+        this.store = store;
+
+        this.onChange = this.onChange.bind(this);
+        this.onUpdate = this.onUpdate.bind(this);
+      }
+
+      onChange() {
+        const { store } = this;
+        if (this.updateRequest) window.cancelAnimationFrame(this.updateRequest);
+        this.updateRequest = window.requestAnimationFrame(() => store.$emit('update'));
+      }
+
+      onUpdate() {
+        const { store } = this;
+        if (!store) throw new Error('Missing Provider wrapper.');
+
+        const newState: any = handler(store, { ...this.state, ...this.props });
+        if (newState) this.setState(newState);
       }
 
       componentWillMount() {
-        const listener = () => {
-          const newState: any = handler(store, { ...this.state, ...this.props });
-          if (newState) this.setState(newState);
-        };
+        const { store } = this;
+        if (!store) throw new Error('Missing Provider wrapper.');
 
-        if (opts.shouldListen) {
-          store.$on('update', listener);
-          this.storeListener = listener;
-        }
+        store.$on('change', this.onChange);
+        store.$on('update', this.onUpdate);
 
-        listener();
+        this.onUpdate();
       }
 
       componentWillUnmount() {
-        if (opts.shouldListen) store.$off('update', this.storeListener);
+        const { store } = this;
+        if (!store) throw new Error('Missing Provider wrapper.');
+
+        store.$off('update', this.onUpdate);
+        store.$off('change', this.onChange);
       }
 
       getComponentProps() {
@@ -64,6 +104,6 @@ export default function createConnector(
       render() {
         return <Component {...this.getComponentProps()}/>;
       }
-    };
-  };
+    }
+  }
 }

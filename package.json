@@ -73,5 +73,8 @@
   "bugs": {
     "url": "https://github.com/goetting/ez-react/issues"
   },
-  "homepage": "https://github.com/goetting/ez-react#readme"
+  "homepage": "https://github.com/goetting/ez-react#readme",
+  "dependencies": {
+    "prop-types": "^15.6.0"
+  }
 }
